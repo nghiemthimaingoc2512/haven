@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Newsreader } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -40,6 +41,14 @@ export default function RootLayout({
       className={`${newsreader.variable} h-full`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Applies a saved theme choice before first paint, so there's no
+            flash from system-default to a stored light/dark preference.
+            See lib/theme.ts for the matching client-side logic. */}
+        <script
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
+      </head>
       <body className="min-h-full" suppressHydrationWarning>
         <LanguageProvider>{children}</LanguageProvider>
       </body>

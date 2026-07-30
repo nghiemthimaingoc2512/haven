@@ -1,8 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useSpeechRecognition,
   type SpeechRecognitionStatus,
@@ -11,6 +10,7 @@ import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
 import { generateReflection } from "@/lib/reflection";
 import { saveMemory, createMemoryId } from "@/lib/storage";
 import { Waveform } from "@/components/Waveform";
+import { Moon } from "@/components/Moon";
 
 type Mode = "voice" | "text";
 type Phase = "composing" | "processing";
@@ -117,10 +117,21 @@ function statusCaption(status: SpeechRecognitionStatus, t: Copy): string {
 }
 
 export default function TalkPage() {
+  return (
+    <Suspense fallback={null}>
+      <TalkPageInner />
+    </Suspense>
+  );
+}
+
+function TalkPageInner() {
   const { lang, t } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<Mode>("voice");
+  const [mode, setMode] = useState<Mode>(
+    searchParams.get("mode") === "text" ? "text" : "voice",
+  );
   const [phase, setPhase] = useState<Phase>("composing");
   const [processingStep, setProcessingStep] = useState<"listening" | "reflecting">("listening");
   const [text, setText] = useState("");
@@ -251,23 +262,17 @@ export default function TalkPage() {
 
   if (phase === "processing") {
     return (
-      <main className="flex min-h-full flex-col items-center justify-center px-6 py-24">
-        <p key={processingStep} className="animate-rise font-serif text-2xl text-harbor">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+        <Moon mood="curious" size={72} float />
+        <p key={processingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
           {processingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className="relative flex min-h-full flex-col px-6 py-10">
-      <header className="flex w-full items-center justify-between">
-        <span className="font-serif text-sm text-muted">{t.brand}</span>
-        <Link href="/history" className="text-sm text-muted hover:text-ink">
-          {t.viewHistory}
-        </Link>
-      </header>
-
+    <div className="relative flex flex-1 flex-col px-6 py-6">
       <div className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-2xl">
           <textarea
@@ -279,20 +284,20 @@ export default function TalkPage() {
             rows={1}
             autoComplete="off"
             spellCheck={false}
-            className="w-full resize-none overflow-hidden bg-transparent text-[1.35rem] leading-relaxed text-ink placeholder:text-mist focus:outline-none"
+            className="w-full resize-none overflow-hidden bg-transparent text-[1.35rem] leading-relaxed text-ink placeholder:text-line focus:outline-none"
             autoFocus
           />
         </div>
       </div>
 
-      <footer className="flex w-full flex-col items-center gap-4 pb-6">
-        <div className="flex items-center gap-1 rounded-full border border-mist p-1 text-sm">
+      <div className="flex w-full flex-col items-center gap-4 pb-6">
+        <div className="flex items-center gap-1 rounded-full border border-line p-1 text-sm">
           <button
             type="button"
             onClick={() => switchMode("voice")}
             aria-pressed={mode === "voice"}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
-              mode === "voice" ? "bg-ember text-paper" : "text-muted hover:text-ink"
+              mode === "voice" ? "bg-primary text-paper" : "text-muted hover:text-ink"
             }`}
           >
             <MicIcon className="h-3.5 w-3.5" />
@@ -303,7 +308,7 @@ export default function TalkPage() {
             onClick={() => switchMode("text")}
             aria-pressed={mode === "text"}
             className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
-              mode === "text" ? "bg-ember text-paper" : "text-muted hover:text-ink"
+              mode === "text" ? "bg-primary text-paper" : "text-muted hover:text-ink"
             }`}
           >
             <KeyboardIcon className="h-3.5 w-3.5" />
@@ -321,7 +326,7 @@ export default function TalkPage() {
                     href={typeof window !== "undefined" ? window.location.href : "/talk"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-2 inline-block text-harbor underline underline-offset-2"
+                    className="mt-2 inline-block text-secondary underline underline-offset-2"
                   >
                     {t.openInBrowser}
                   </a>
@@ -356,10 +361,10 @@ export default function TalkPage() {
                 aria-label={status === "listening" ? t.statusPaused : t.statusIdle}
                 className={`flex h-16 w-16 items-center justify-center rounded-full border transition-all ${
                   status === "listening"
-                    ? "mic-glow border-ember bg-ember text-paper"
+                    ? "mic-glow border-primary bg-primary text-paper"
                     : micDisabled
-                      ? "cursor-not-allowed border-mist text-mist"
-                      : "border-mist text-ink hover:border-ember hover:text-ember"
+                      ? "cursor-not-allowed border-line text-line"
+                      : "border-line text-ink hover:border-primary hover:text-primary"
                 }`}
               >
                 {status === "listening" ? (
@@ -372,7 +377,7 @@ export default function TalkPage() {
               <button
                 type="button"
                 onClick={handleFinish}
-                className={`text-sm text-ember transition-opacity hover:opacity-70 ${
+                className={`text-sm text-primary transition-opacity hover:opacity-70 ${
                   hasMeaningfulContent ? "opacity-100" : "pointer-events-none opacity-0"
                 }`}
               >
@@ -402,8 +407,8 @@ export default function TalkPage() {
                 disabled={!hasMeaningfulContent}
                 className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm transition-opacity ${
                   hasMeaningfulContent
-                    ? "bg-ember text-paper hover:opacity-90"
-                    : "cursor-not-allowed bg-mist text-muted"
+                    ? "bg-primary text-paper hover:opacity-90"
+                    : "cursor-not-allowed bg-line text-muted"
                 }`}
               >
                 {t.send}
@@ -417,7 +422,7 @@ export default function TalkPage() {
             </p>
           </div>
         )}
-      </footer>
-    </main>
+      </div>
+    </div>
   );
 }

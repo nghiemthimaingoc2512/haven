@@ -14,14 +14,39 @@ export default function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#F7F2EA",
+          background:
+            "radial-gradient(ellipse 120% 80% at 50% 0%, #E9E2FF, #FCFBFF 60%)",
         }}
       >
+        <div style={{ position: "relative", width: 140, height: 140, display: "flex" }}>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #C8B7FF, #A49AF9)",
+              display: "flex",
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: -18,
+              right: -28,
+              width: 112,
+              height: 112,
+              borderRadius: "50%",
+              background: "#FCFBFF",
+              display: "flex",
+            }}
+          />
+        </div>
         <div
           style={{
+            marginTop: 28,
             fontSize: 108,
             fontFamily: "serif",
-            color: "#211D1A",
+            color: "#2B2640",
             fontWeight: 600,
           }}
         >
@@ -29,13 +54,13 @@ export default function OpengraphImage() {
         </div>
         <div
           style={{
-            marginTop: 20,
+            marginTop: 12,
             fontSize: 34,
             fontFamily: "serif",
-            color: "#3E5C58",
+            color: "#8477F2",
           }}
         >
-          Somewhere to go.
+          A space that listens.
         </div>
       </div>
     ),

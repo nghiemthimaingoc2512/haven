@@ -1,38 +1,88 @@
 @import "tailwindcss";
 
 :root {
-  --ink: #211d1a;
-  --paper: #f7f2ea;
-  --paper-raised: #efe6d6;
-  --ember: #b5652f;
-  --harbor: #3e5c58;
-  --mist: #ddd5c7;
-  --signal: #a23b33;
-  --muted: #6b6259;
+  --ink: #2b2640;
+  --paper: #fcfbff;
+  --card: #ffffff;
+  --line: #e9e4fa;
+  --primary: #a49af9;
+  --primary-hover: #968af5;
+  --primary-pressed: #8477f2;
+  --secondary: #c8b7ff;
+  --accent-pink: #f7c7e8;
+  --soft-blue: #cfe7ff;
+  --signal: #e0607a;
+  --muted: #8b85a3;
+  /* Constant across light/dark/night — the mascot's face needs to read
+     against its own lavender gradient regardless of site theme. */
+  --moon-face: #3d3560;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --ink: #f1ebdf;
-    --paper: #22282a;
-    --paper-raised: #292f2f;
-    --ember: #e3925c;
-    --harbor: #8fb3ac;
-    --mist: #47504e;
-    --signal: #e2776c;
-    --muted: #a79d8e;
+    --ink: #f1eeff;
+    --paper: #17172a;
+    --card: #211f3a;
+    --line: color-mix(in srgb, #a49af9 25%, transparent);
+    --primary: #b9afff;
+    --primary-hover: #c6bdff;
+    --primary-pressed: #a89dff;
+    --secondary: #d8cdff;
+    --accent-pink: #f0b8e0;
+    --soft-blue: #b9d6f5;
+    --signal: #eb7f97;
+    --muted: #9e97c2;
     color-scheme: dark;
   }
+}
+
+/* Manual theme override (onboarding + Me > Theme). Wins over the OS
+   preference in both directions — see the inline pre-hydration script in
+   app/layout.tsx. */
+:root[data-theme="dark"] {
+  --ink: #f1eeff;
+  --paper: #17172a;
+  --card: #211f3a;
+  --line: color-mix(in srgb, #a49af9 25%, transparent);
+  --primary: #b9afff;
+  --primary-hover: #c6bdff;
+  --primary-pressed: #a89dff;
+  --secondary: #d8cdff;
+  --accent-pink: #f0b8e0;
+  --soft-blue: #b9d6f5;
+  --signal: #eb7f97;
+  --muted: #9e97c2;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --ink: #2b2640;
+  --paper: #fcfbff;
+  --card: #ffffff;
+  --line: #e9e4fa;
+  --primary: #a49af9;
+  --primary-hover: #968af5;
+  --primary-pressed: #8477f2;
+  --secondary: #c8b7ff;
+  --accent-pink: #f7c7e8;
+  --soft-blue: #cfe7ff;
+  --signal: #e0607a;
+  --muted: #8b85a3;
+  color-scheme: light;
 }
 
 @theme inline {
   --color-ink: var(--ink);
   --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
-  --color-ember: var(--ember);
-  --color-harbor: var(--harbor);
-  --color-mist: var(--mist);
+  --color-card: var(--card);
+  --color-line: var(--line);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-pressed: var(--primary-pressed);
+  --color-secondary: var(--secondary);
+  --color-accent-pink: var(--accent-pink);
+  --color-soft-blue: var(--soft-blue);
   --color-signal: var(--signal);
   --color-muted: var(--muted);
   --font-serif: var(--font-newsreader), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -55,10 +105,11 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.6s ease, color 0.6s ease;
 }
 
 ::selection {
-  background: var(--mist);
+  background: var(--secondary);
 }
 
 a {
@@ -86,6 +137,37 @@ a {
   }
 }
 
+@keyframes haven-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes haven-twinkle {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+@keyframes haven-drift {
+  from {
+    transform: translateX(-6%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-wave {
     animation: haven-wave 1s ease-in-out infinite;
@@ -94,10 +176,45 @@ a {
   .animate-rise {
     animation: haven-rise 0.5s ease-out both;
   }
+
+  .animate-breathe {
+    animation: haven-float 6s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: haven-float 5s ease-in-out infinite;
+  }
+
+  .animate-twinkle {
+    animation: haven-twinkle 3s ease-in-out infinite;
+  }
+
+  .animate-drift {
+    animation: haven-drift 12s ease-in-out infinite alternate;
+  }
 }
 
 .mic-glow {
   box-shadow:
-    0 0 0 10px color-mix(in srgb, var(--ember) 12%, transparent),
-    0 0 28px 6px color-mix(in srgb, var(--ember) 20%, transparent);
+    0 0 0 10px color-mix(in srgb, var(--primary) 15%, transparent),
+    0 0 32px 8px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* Floating / glass surface — white, blurred, soft lavender border. */
+.haven-surface {
+  background: color-mix(in srgb, var(--card) 92%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: 0 12px 32px -14px color-mix(in srgb, var(--primary) 35%, transparent);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Soft moonlit gradient wash used behind hero/onboarding moments. */
+.haven-moonlight {
+  background: radial-gradient(
+    ellipse 120% 80% at 50% -10%,
+    color-mix(in srgb, var(--secondary) 35%, transparent),
+    transparent 65%
+  ),
+  linear-gradient(180deg, var(--paper), var(--paper) 60%, color-mix(in srgb, var(--soft-blue) 25%, var(--paper)));
 }

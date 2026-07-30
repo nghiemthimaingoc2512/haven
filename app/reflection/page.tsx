@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useMemories } from "@/lib/storage";
+import { Moon } from "@/components/Moon";
 
 export default function ReflectionPage() {
   const { t } = useLanguage();
@@ -23,12 +24,13 @@ export default function ReflectionPage() {
   if (!latest) {
     return (
       <main className="flex min-h-full flex-col items-center justify-center px-6 py-24">
-        <p className="max-w-sm text-center font-serif text-xl text-muted">
-          {t.historyEmpty}
+        <Moon mood="curious" size={64} float />
+        <p className="mt-4 max-w-sm text-center font-serif text-xl text-muted">
+          {t.emptyMemoriesBody}
         </p>
         <Link
           href="/talk"
-          className="mt-6 text-sm text-harbor underline underline-offset-2"
+          className="mt-6 text-sm text-secondary underline underline-offset-2"
         >
           {t.newConversation}
         </Link>
@@ -39,8 +41,11 @@ export default function ReflectionPage() {
   return (
     <main className="flex min-h-full flex-col px-6 py-10">
       <header className="flex w-full items-center justify-between">
-        <span className="font-serif text-sm text-muted">{t.brand}</span>
-        <Link href="/history" className="text-sm text-muted hover:text-ink">
+        <span className="flex items-center gap-1.5 font-serif text-sm text-muted">
+          <Moon mood="smiling" size={18} glow={false} />
+          {t.brand}
+        </span>
+        <Link href="/story" className="text-sm text-muted hover:text-ink">
           {t.viewHistory}
         </Link>
       </header>
@@ -48,7 +53,7 @@ export default function ReflectionPage() {
       <div className="flex flex-1 items-center justify-center py-10">
         <div className="w-full max-w-xl">
           {isFirstEver && (
-            <p className="animate-rise mb-6 text-center font-serif italic text-harbor">
+            <p className="animate-rise mb-6 text-center font-serif italic text-secondary">
               {t.firstConversation}
             </p>
           )}
@@ -59,7 +64,7 @@ export default function ReflectionPage() {
             </p>
           )}
 
-          <div className="animate-rise rounded-lg border border-mist bg-paper-raised px-8 py-10">
+          <div className="animate-rise haven-surface rounded-2xl px-8 py-10">
             <p className="text-xs uppercase tracking-wide text-muted">
               {t.reflectionHeading}
             </p>
@@ -69,8 +74,8 @@ export default function ReflectionPage() {
             </p>
 
             {latest.standout && (
-              <div className="mt-6 border-t border-mist pt-4">
-                <p className="text-sm font-medium text-harbor">
+              <div className="mt-6 border-t border-line pt-4">
+                <p className="text-sm font-medium text-secondary">
                   {t.standoutLabel}
                 </p>
                 <p className="mt-1 font-serif italic text-ink/90">
@@ -85,7 +90,7 @@ export default function ReflectionPage() {
           </div>
 
           <div className="mt-8 flex justify-center">
-            <Link href="/talk" className="text-sm text-ember hover:opacity-70">
+            <Link href="/talk" className="text-sm text-primary hover:opacity-70">
               {t.newConversation}
             </Link>
           </div>

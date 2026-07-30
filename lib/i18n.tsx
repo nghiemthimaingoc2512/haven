@@ -55,6 +55,49 @@ export interface Copy {
   historyEarlier: string;
   historyEmpty: string;
   backToTalk: string;
+  storyTitle: string;
+  onboardingContinue: string;
+  onboardingNameTitle: string;
+  onboardingNamePlaceholder: string;
+  onboardingLangTitle: string;
+  onboardingEnter: string;
+  navHome: string;
+  navTalk: string;
+  navDiscover: string;
+  navMyStory: string;
+  navMe: string;
+  homeGreetingMorning: string;
+  homeGreetingAfternoon: string;
+  homeGreetingEvening: string;
+  homeGreetingNight: string;
+  homeQuickTalk: string;
+  homeQuickWrite: string;
+  homeRecentMemoryLabel: string;
+  homeNoMemoryYet: string;
+  comingSoon: string;
+  themeLabel: string;
+  themeLight: string;
+  themeDark: string;
+  themeSystem: string;
+  profileLabel: string;
+  languageLabel: string;
+  streakSuffix: string;
+  onboardingAppearanceTitle: string;
+  onboardingAuto: string;
+  welcomeHomeGreeting: string;
+  welcomeHomeBody: string;
+  heroQuestion: string;
+  todaysTide: string;
+  glowOfDay: string;
+  continueJourney: string;
+  lastConversation: string;
+  savedMemory: string;
+  emptyMemoriesTitle: string;
+  emptyMemoriesBody: string;
+  nightPromptTitle: string;
+  nightPromptBody: string;
+  nightPromptAccept: string;
+  nightPromptLater: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -75,9 +118,9 @@ const dictionary: Record<Lang, Copy> = {
     voiceModeLabel: "Giọng nói",
     textModeLabel: "Gõ chữ",
     openInBrowser: "Mở trong trình duyệt",
-    statusIdle: "Chạm để nói",
+    statusIdle: "Mình ở đây.",
     statusListening: "Đang lắng nghe…",
-    statusPaused: "Đã tạm dừng — chạm để tiếp tục",
+    statusPaused: "Tạm dừng một chút — chạm khi bạn sẵn sàng.",
     statusPermissionDenied:
       "Micro chưa được cho phép ở đây. Nếu bạn đang xem bản xem trước nhúng, hãy mở Haven trong một tab trình duyệt thật để dùng giọng nói — hoặc kiểm tra quyền micro trong cài đặt trình duyệt. Bạn vẫn có thể gõ chữ.",
     statusNetworkError:
@@ -100,6 +143,49 @@ const dictionary: Record<Lang, Copy> = {
     historyEarlier: "Trước đó",
     historyEmpty: "Chưa có cuộc trò chuyện nào.",
     backToTalk: "Quay lại trò chuyện",
+    storyTitle: "Chòm sao của bạn",
+    onboardingContinue: "Tiếp tục",
+    onboardingNameTitle: "Haven nên gọi bạn là gì?",
+    onboardingNamePlaceholder: "Ví dụ: Bảo, Linh, An…",
+    onboardingLangTitle: "Ngôn ngữ bạn muốn dùng",
+    onboardingEnter: "Vào Haven",
+    navHome: "Trang chính",
+    navTalk: "Thì thầm",
+    navDiscover: "Cực quang",
+    navMyStory: "Chòm sao",
+    navMe: "Tôi",
+    homeGreetingMorning: "Chào buổi sáng",
+    homeGreetingAfternoon: "Chào buổi chiều",
+    homeGreetingEvening: "Chào buổi tối",
+    homeGreetingNight: "Đêm khuya rồi",
+    homeQuickTalk: "Bắt đầu nói",
+    homeQuickWrite: "Viết ra",
+    homeRecentMemoryLabel: "Một điều mình còn nhớ",
+    homeNoMemoryYet: "Chưa có điều gì để nhớ lại — hãy bắt đầu cuộc trò chuyện đầu tiên.",
+    comingSoon: "Sắp có.",
+    themeLabel: "Giao diện",
+    themeLight: "Sáng",
+    themeDark: "Tối",
+    themeSystem: "Theo hệ thống",
+    profileLabel: "Tên",
+    languageLabel: "Ngôn ngữ",
+    streakSuffix: "ngày liên tiếp",
+    onboardingAppearanceTitle: "Chọn giao diện bạn thích",
+    onboardingAuto: "Tự động",
+    welcomeHomeGreeting: "Chào mừng bạn về nhà.",
+    welcomeHomeBody: "Từ giờ, Haven sẽ ở đây — lắng nghe, ghi nhớ, và đi cùng bạn.",
+    heroQuestion: "Trái tim bạn tối nay thế nào?",
+    todaysTide: "Nhịp cảm xúc hôm nay",
+    glowOfDay: "Ánh sáng nhỏ hôm nay",
+    continueJourney: "Tiếp tục hành trình",
+    lastConversation: "Cuộc trò chuyện gần nhất",
+    savedMemory: "Một điều đã lưu giữ",
+    emptyMemoriesTitle: "Chưa có điều gì để nhớ lại.",
+    emptyMemoriesBody: "Mình rất mong được ghi nhớ câu chuyện đầu tiên của chúng ta.",
+    nightPromptTitle: "Khuya rồi đấy.",
+    nightPromptBody: "Bạn có muốn Haven dịu lại một chút cho buổi tối không? Đây là lúc tốt để chậm lại.",
+    nightPromptAccept: "Chuyển sang chế độ đêm",
+    nightPromptLater: "Để sau",
   },
   en: {
     brand: "Haven",
@@ -118,9 +204,9 @@ const dictionary: Record<Lang, Copy> = {
     voiceModeLabel: "Voice",
     textModeLabel: "Type",
     openInBrowser: "Open in browser",
-    statusIdle: "Tap to talk",
+    statusIdle: "I'm here.",
     statusListening: "Listening…",
-    statusPaused: "Paused — tap to continue",
+    statusPaused: "Paused for a moment — tap whenever you're ready.",
     statusPermissionDenied:
       "Microphone isn't enabled here. If you're viewing an embedded preview, open Haven in a real browser tab to use voice — or check your microphone permission in browser settings. You can still type.",
     statusNetworkError:
@@ -144,6 +230,49 @@ const dictionary: Record<Lang, Copy> = {
     historyEarlier: "Earlier",
     historyEmpty: "No conversations yet.",
     backToTalk: "Back to talking",
+    storyTitle: "Your Constellation",
+    onboardingContinue: "Continue",
+    onboardingNameTitle: "What should Haven call you?",
+    onboardingNamePlaceholder: "Alex, Emma, Bao…",
+    onboardingLangTitle: "Preferred language",
+    onboardingEnter: "Enter Haven",
+    navHome: "Home",
+    navTalk: "Whisper",
+    navDiscover: "Aurora",
+    navMyStory: "Constellation",
+    navMe: "Me",
+    homeGreetingMorning: "Good morning",
+    homeGreetingAfternoon: "Good afternoon",
+    homeGreetingEvening: "Good evening",
+    homeGreetingNight: "It's late",
+    homeQuickTalk: "Start talking",
+    homeQuickWrite: "Write",
+    homeRecentMemoryLabel: "Something I still remember",
+    homeNoMemoryYet: "Nothing to remember yet — start your first conversation.",
+    comingSoon: "Coming soon.",
+    themeLabel: "Appearance",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "System",
+    profileLabel: "Name",
+    languageLabel: "Language",
+    streakSuffix: "days in a row",
+    onboardingAppearanceTitle: "Choose your appearance",
+    onboardingAuto: "Auto",
+    welcomeHomeGreeting: "Welcome home.",
+    welcomeHomeBody: "From now on, Haven will be here — listening, remembering, and growing alongside you.",
+    heroQuestion: "How is your heart tonight?",
+    todaysTide: "Today's Tide",
+    glowOfDay: "Glow of the Day",
+    continueJourney: "Continue Your Journey",
+    lastConversation: "Last Conversation",
+    savedMemory: "A Saved Memory",
+    emptyMemoriesTitle: "No memories yet.",
+    emptyMemoriesBody: "I'm excited to remember our first story together.",
+    nightPromptTitle: "It's getting late.",
+    nightPromptBody: "Would you like Haven to become a little quieter for the night? This is a good time to slow down.",
+    nightPromptAccept: "Switch to Night Mode",
+    nightPromptLater: "Maybe later",
   },
 };
 

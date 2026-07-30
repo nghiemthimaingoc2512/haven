@@ -14,7 +14,7 @@ export function Waveform({ active }: { active: boolean }) {
         <span
           key={i}
           className={`w-1 h-6 origin-bottom rounded-full ${
-            active ? "animate-wave bg-ember" : "bg-mist"
+            active ? "animate-wave bg-primary" : "bg-line"
           }`}
           style={
             active
