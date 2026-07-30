@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# claude code local session state (personal tool permissions, not project config)
+.claude/settings.local.json
