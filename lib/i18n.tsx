@@ -100,6 +100,43 @@ export interface Copy {
   nightPromptLater: string;
   confidenceLabel: string;
   savedToJourney: string;
+  auroraIntro: string;
+  auroraPlaceholder: string;
+  auroraSend: string;
+  auroraReframeLabel: string;
+  auroraConsiderLabel: string;
+  auroraNextStepLabel: string;
+  auroraNewQuestion: string;
+  auroraTryPrompt: string;
+  constellationEmpty: string;
+  constellationFilterAll: string;
+  constellationZoomIn: string;
+  constellationZoomOut: string;
+  constellationClose: string;
+  nightWindDown: string;
+  nightRitualTitle: string;
+  nightBreathing: string;
+  nightReadMemories: string;
+  nightDreamJournal: string;
+  weeklyReflectionLabel: string;
+  weeklyReflectionBody: string;
+  constellationPreviewLabel: string;
+  meNotifications: string;
+  meAiMemory: string;
+  meAiMemoryBody: string;
+  mePrivacy: string;
+  mePrivacyBody: string;
+  meExport: string;
+  meExportDone: string;
+  meDeleteData: string;
+  meDeleteConfirm: string;
+  meDeleteCancel: string;
+  meAbout: string;
+  meVersion: string;
+  meSupport: string;
+  meSupportBody: string;
+  carryAloneLine: string;
+  breatheTogetherLine: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -190,6 +227,43 @@ const dictionary: Record<Lang, Copy> = {
     nightPromptLater: "Để sau",
     confidenceLabel: "Mức độ chắc chắn",
     savedToJourney: "Đã lưu vào hành trình cảm xúc của bạn.",
+    auroraIntro: "Mình ở đây để cùng bạn suy nghĩ.",
+    auroraPlaceholder: "Bạn đang phân vân điều gì?",
+    auroraSend: "Hỏi Aurora",
+    auroraReframeLabel: "Thử nghĩ theo hướng này",
+    auroraConsiderLabel: "Vài điều đáng cân nhắc",
+    auroraNextStepLabel: "Một bước nhỏ",
+    auroraNewQuestion: "Hỏi điều khác",
+    auroraTryPrompt: "Hoặc thử một trong số này:",
+    constellationEmpty: "Bầu trời vẫn còn trống. Mỗi cuộc trò chuyện sẽ trở thành một ngôi sao.",
+    constellationFilterAll: "Tất cả",
+    constellationZoomIn: "Phóng to",
+    constellationZoomOut: "Thu nhỏ",
+    constellationClose: "Đóng",
+    nightWindDown: "Cùng nhau chậm lại nhé.",
+    nightRitualTitle: "Nghi thức buổi tối",
+    nightBreathing: "Hãy cùng thở nhé",
+    nightReadMemories: "Đọc lại ký ức hôm nay",
+    nightDreamJournal: "Nhật ký giấc mơ",
+    weeklyReflectionLabel: "Suy ngẫm tuần này",
+    weeklyReflectionBody: "Tuần này bạn đã trò chuyện",
+    constellationPreviewLabel: "Xem trước chòm sao",
+    meNotifications: "Thông báo",
+    meAiMemory: "Trí nhớ AI",
+    meAiMemoryBody: "Haven ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Chòm sao.",
+    mePrivacy: "Quyền riêng tư",
+    mePrivacyBody: "Mọi dữ liệu hiện được lưu trực tiếp trên thiết bị của bạn — không có máy chủ, không chia sẻ với bên thứ ba.",
+    meExport: "Xuất dữ liệu",
+    meExportDone: "Đã tải xuống.",
+    meDeleteData: "Xoá toàn bộ dữ liệu",
+    meDeleteConfirm: "Bạn chắc chứ? Điều này sẽ xoá toàn bộ ký ức đã lưu.",
+    meDeleteCancel: "Không, giữ lại",
+    meAbout: "Về Haven",
+    meVersion: "Phiên bản",
+    meSupport: "Hỗ trợ",
+    meSupportBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
+    carryAloneLine: "Bạn không cần phải một mình gánh mọi thứ.",
+    breatheTogetherLine: "Hãy cùng thở nhé.",
   },
   en: {
     brand: "Haven",
@@ -279,6 +353,43 @@ const dictionary: Record<Lang, Copy> = {
     nightPromptLater: "Maybe later",
     confidenceLabel: "How sure I am",
     savedToJourney: "Saved to your emotional journey.",
+    auroraIntro: "I'm here to think alongside you.",
+    auroraPlaceholder: "What are you weighing right now?",
+    auroraSend: "Ask Aurora",
+    auroraReframeLabel: "Try thinking about it this way",
+    auroraConsiderLabel: "A few things worth considering",
+    auroraNextStepLabel: "One small step",
+    auroraNewQuestion: "Ask something else",
+    auroraTryPrompt: "Or try one of these:",
+    constellationEmpty: "The sky is still empty. Every conversation becomes a star.",
+    constellationFilterAll: "All",
+    constellationZoomIn: "Zoom in",
+    constellationZoomOut: "Zoom out",
+    constellationClose: "Close",
+    nightWindDown: "Let's slow down together.",
+    nightRitualTitle: "Night Ritual",
+    nightBreathing: "Let's breathe together",
+    nightReadMemories: "Read today's memories",
+    nightDreamJournal: "Dream Journal",
+    weeklyReflectionLabel: "This week's reflection",
+    weeklyReflectionBody: "You've talked this week",
+    constellationPreviewLabel: "Constellation preview",
+    meNotifications: "Notifications",
+    meAiMemory: "AI Memory",
+    meAiMemoryBody: "Haven remembers what you share to understand you better over time. You can view or delete anything anytime in Constellation.",
+    mePrivacy: "Privacy",
+    mePrivacyBody: "Everything is currently stored directly on your device — no server, nothing shared with third parties.",
+    meExport: "Export data",
+    meExportDone: "Downloaded.",
+    meDeleteData: "Delete all data",
+    meDeleteConfirm: "Are you sure? This will delete every saved memory.",
+    meDeleteCancel: "No, keep it",
+    meAbout: "About Haven",
+    meVersion: "Version",
+    meSupport: "Support",
+    meSupportBody: "This is a prototype — there's no official support channel yet.",
+    carryAloneLine: "You don't have to carry everything alone.",
+    breatheTogetherLine: "Let's breathe together.",
   },
 };
 

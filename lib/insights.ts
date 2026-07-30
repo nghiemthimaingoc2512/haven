@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { Memory } from "@/lib/storage";
+import type { EmotionKey } from "@/lib/emotions";
 
 export type DayPeriod = "morning" | "afternoon" | "evening" | "night";
 
@@ -46,4 +47,31 @@ export function computeStreak(memories: Memory[]): number {
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
+}
+
+export interface WeeklySummary {
+  count: number;
+  dominantEmotion: EmotionKey | null;
+}
+
+/** Real, derived summary of the last 7 days — not fabricated. */
+export function getWeeklySummary(memories: Memory[]): WeeklySummary {
+  const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const thisWeek = memories.filter((m) => new Date(m.createdAt).getTime() >= weekAgo);
+
+  const counts = new Map<EmotionKey, number>();
+  for (const m of thisWeek) {
+    if (!m.emotionKey) continue;
+    counts.set(m.emotionKey, (counts.get(m.emotionKey) ?? 0) + 1);
+  }
+  let dominantEmotion: EmotionKey | null = null;
+  let best = 0;
+  for (const [key, count] of counts) {
+    if (count > best) {
+      best = count;
+      dominantEmotion = key;
+    }
+  }
+
+  return { count: thisWeek.length, dominantEmotion };
 }

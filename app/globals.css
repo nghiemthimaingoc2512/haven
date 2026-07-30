@@ -4,16 +4,17 @@
   --ink: #2b2640;
   --paper: #faf8ff;
   --card: #ffffff;
-  --moon-glow: #f7f3ff;
+  --moon-glow: #f8f4ff;
   --line: #e4dcff;
   --primary: #8e72ff;
   --primary-hover: #7c5fff;
   --primary-pressed: #6b4ef0;
   --secondary: #a78bfa;
-  --lavender: #c8b6ff;
+  --lavender: #d9ccff;
   --accent-pink: #ffd7f2;
   --soft-blue: #cfe7ff;
-  --night-indigo: #3e3276;
+  --night-indigo: #30265f;
+  --star: #ffe9a8;
   --signal: #e0607a;
   --muted: #8b85a3;
   /* Constant across light/dark/night — the mascot's face needs to read
@@ -25,9 +26,9 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --ink: #f1eeff;
-    --paper: #1a1435;
-    --card: #3e3276;
-    --moon-glow: #2a2350;
+    --paper: #180f38;
+    --card: #30265f;
+    --moon-glow: #241a4d;
     --line: color-mix(in srgb, #8e72ff 30%, transparent);
     --primary: #a78bfa;
     --primary-hover: #b79cff;
@@ -36,7 +37,8 @@
     --lavender: #d9cbff;
     --accent-pink: #f5b8e0;
     --soft-blue: #b9d6f5;
-    --night-indigo: #3e3276;
+    --night-indigo: #30265f;
+    --star: #ffe9a8;
     --signal: #eb7f97;
     --muted: #a79bd6;
     color-scheme: dark;
@@ -48,9 +50,9 @@
    app/layout.tsx. */
 :root[data-theme="dark"] {
   --ink: #f1eeff;
-  --paper: #1a1435;
-  --card: #3e3276;
-  --moon-glow: #2a2350;
+  --paper: #180f38;
+  --card: #30265f;
+  --moon-glow: #241a4d;
   --line: color-mix(in srgb, #8e72ff 30%, transparent);
   --primary: #a78bfa;
   --primary-hover: #b79cff;
@@ -59,7 +61,8 @@
   --lavender: #d9cbff;
   --accent-pink: #f5b8e0;
   --soft-blue: #b9d6f5;
-  --night-indigo: #3e3276;
+  --night-indigo: #30265f;
+  --star: #ffe9a8;
   --signal: #eb7f97;
   --muted: #a79bd6;
   color-scheme: dark;
@@ -69,16 +72,17 @@
   --ink: #2b2640;
   --paper: #faf8ff;
   --card: #ffffff;
-  --moon-glow: #f7f3ff;
+  --moon-glow: #f8f4ff;
   --line: #e4dcff;
   --primary: #8e72ff;
   --primary-hover: #7c5fff;
   --primary-pressed: #6b4ef0;
   --secondary: #a78bfa;
-  --lavender: #c8b6ff;
+  --lavender: #d9ccff;
   --accent-pink: #ffd7f2;
   --soft-blue: #cfe7ff;
-  --night-indigo: #3e3276;
+  --night-indigo: #30265f;
+  --star: #ffe9a8;
   --signal: #e0607a;
   --muted: #8b85a3;
   color-scheme: light;
@@ -98,6 +102,7 @@
   --color-accent-pink: var(--accent-pink);
   --color-soft-blue: var(--soft-blue);
   --color-night-indigo: var(--night-indigo);
+  --color-star: var(--star);
   --color-signal: var(--signal);
   --color-muted: var(--muted);
   --font-serif: var(--font-newsreader), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -237,6 +242,19 @@ a {
   .animate-glow-pulse {
     animation: haven-glow-pulse 3.5s ease-in-out infinite;
   }
+
+  /* Night Mode moves slower than the daytime app — everything quieter. */
+  .animate-float-slow {
+    animation: haven-float 10s ease-in-out infinite;
+  }
+
+  .animate-twinkle-slow {
+    animation: haven-twinkle 5s ease-in-out infinite;
+  }
+
+  .animate-drift-slow {
+    animation: haven-drift 22s ease-in-out infinite alternate;
+  }
 }
 
 .mic-glow {
@@ -276,6 +294,21 @@ a {
     transparent 70%
   ),
   linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--night-indigo) 35%, var(--paper)));
+}
+
+/* Brighter, livelier wash for Aurora — an advisor space, not a listening one. */
+.haven-aurora {
+  background: radial-gradient(
+    ellipse 140% 90% at 20% -10%,
+    color-mix(in srgb, var(--star) 30%, transparent),
+    transparent 60%
+  ),
+  radial-gradient(
+    ellipse 120% 90% at 90% 10%,
+    color-mix(in srgb, var(--accent-pink) 35%, transparent),
+    transparent 65%
+  ),
+  linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--secondary) 18%, var(--paper)));
 }
 
 /* Shared "alive" CTA treatment — gentle lift + glow on hover, soft press. */

@@ -11,6 +11,7 @@ import { generateReflection } from "@/lib/reflection";
 import { saveMemory, createMemoryId } from "@/lib/storage";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/Moon";
+import { useDayPeriod } from "@/lib/insights";
 
 type Mode = "voice" | "text";
 type Phase = "composing" | "processing";
@@ -128,6 +129,7 @@ function TalkPageInner() {
   const { lang, t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const isNight = useDayPeriod() === "night";
 
   const [mode, setMode] = useState<Mode>(
     searchParams.get("mode") === "text" ? "text" : "voice",
@@ -266,7 +268,7 @@ function TalkPageInner() {
   if (phase === "processing") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-        <Moon mood="curious" size={72} float />
+        <Moon mood="curious" size={80} float sparkle />
         <p key={processingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
           {processingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
@@ -275,8 +277,50 @@ function TalkPageInner() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col px-6 py-6">
-      <div className="flex flex-1 items-center justify-center">
+    <div className="relative flex flex-1 flex-col px-6 py-10">
+      {/* Subtle corner mode switch — the moment stays quiet, the control doesn't compete for attention */}
+      <div className="flex justify-end">
+        <div className="flex items-center gap-1 rounded-full border border-line p-1 text-xs">
+          <button
+            type="button"
+            onClick={() => switchMode("voice")}
+            aria-pressed={mode === "voice"}
+            aria-label={t.voiceModeLabel}
+            className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+              mode === "voice" ? "bg-primary text-paper" : "text-muted hover:text-ink"
+            }`}
+          >
+            <MicIcon className="h-3.5 w-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => switchMode("text")}
+            aria-pressed={mode === "text"}
+            aria-label={t.textModeLabel}
+            className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
+              mode === "text" ? "bg-primary text-paper" : "text-muted hover:text-ink"
+            }`}
+          >
+            <KeyboardIcon className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
+        {mode === "voice" && (
+          <div className="flex flex-col items-center gap-3">
+            <Moon
+              mood={isNight ? "sleeping" : "smiling"}
+              size={status === "listening" ? 120 : 96}
+              float
+              className={status === "listening" ? "animate-glow-pulse" : ""}
+            />
+            {!hasContent && status === "idle" && (
+              <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
+            )}
+          </div>
+        )}
+
         <div className="w-full max-w-2xl">
           <textarea
             ref={textareaRef}
@@ -294,31 +338,6 @@ function TalkPageInner() {
       </div>
 
       <div className="flex w-full flex-col items-center gap-4 pb-6">
-        <div className="flex items-center gap-1 rounded-full border border-line p-1 text-sm">
-          <button
-            type="button"
-            onClick={() => switchMode("voice")}
-            aria-pressed={mode === "voice"}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
-              mode === "voice" ? "bg-primary text-paper" : "text-muted hover:text-ink"
-            }`}
-          >
-            <MicIcon className="h-3.5 w-3.5" />
-            {t.voiceModeLabel}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode("text")}
-            aria-pressed={mode === "text"}
-            className={`flex items-center gap-1.5 rounded-full px-3 py-1 transition-colors ${
-              mode === "text" ? "bg-primary text-paper" : "text-muted hover:text-ink"
-            }`}
-          >
-            <KeyboardIcon className="h-3.5 w-3.5" />
-            {t.textModeLabel}
-          </button>
-        </div>
-
         {mode === "voice" ? (
           <>
             {showTroubleMessage && (

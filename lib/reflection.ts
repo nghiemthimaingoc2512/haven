@@ -73,6 +73,8 @@ const TOPIC_KEYWORDS_VI: Array<[string[], string]> = [
   [["người yêu", "bạn trai", "bạn gái", "tình yêu", "chia tay"], "tình cảm"],
   [["sức khỏe", "ốm", "bệnh", "ngủ"], "sức khỏe"],
   [["tương lai", "dự định", "kế hoạch"], "tương lai"],
+  [["bạn bè", "bạn thân"], "bạn bè"],
+  [["du lịch", "chuyến đi", "đi chơi"], "du lịch"],
 ];
 
 const TOPIC_KEYWORDS_EN: Array<[string[], string]> = [
@@ -81,6 +83,8 @@ const TOPIC_KEYWORDS_EN: Array<[string[], string]> = [
   [["relationship", "boyfriend", "girlfriend", "breakup", "partner"], "relationship"],
   [["health", "sick", "sleep", "tired"], "health"],
   [["future", "plan", "planning"], "future"],
+  [["friend", "friendship"], "friend"],
+  [["travel", "trip", "vacation"], "travel"],
 ];
 
 const PEOPLE_KEYWORDS_VI = ["mẹ", "bố", "ba", "chị", "anh", "em", "bạn thân", "sếp", "đồng nghiệp", "người yêu"];
