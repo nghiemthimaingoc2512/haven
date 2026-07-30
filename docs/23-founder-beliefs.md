@@ -33,3 +33,7 @@ A reflection that only ever makes someone feel good is flattery, not understandi
 ## Continuity > Novelty
 
 The temptation in any AI product is to keep shipping new interfaces and flashy capabilities, because that's what gets attention. The one thing that must never break, regardless of what's new, is the continuity of someone's own story — a redesign, a new modality, or a model upgrade is a failure if it costs someone their history or its coherence. **In practice:** every new interface Haven adds is judged first on whether it strengthens or fragments the Life Graph, before it's judged on how impressive it is on its own.
+
+## Independence > Optionality *(added after [25-the-existential-test.md](25-the-existential-test.md))*
+
+A stated commitment not to run ads or optimize for engagement is worth exactly as much as it costs to break — and under enough capital pressure, a merely stated commitment gets renegotiated. We believe the only credible version of "trust" against competitors with a hundred times our resources is one that's structurally expensive to betray, which means giving up real optionality now: easy acquisition by the platforms we're positioned against, and access to investors who need a conventional exit. **In practice:** governance structure is chosen before growth-stage capital is raised, not after, and is judged on how hard it would be to reverse under pressure — not on how good it sounds in a pitch.

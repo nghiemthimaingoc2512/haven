@@ -2,6 +2,10 @@
 
 # 24 — Founder Questions
 
+## The most urgent one *(added after [25-the-existential-test.md](25-the-existential-test.md))*
+
+**0. What governance structure actually makes "no ads, no engagement optimization, off-ramp over retention" binding rather than statable?** Every other question in this document assumes the company survives long enough to matter. This one determines whether it deserves to. [25-the-existential-test.md](25-the-existential-test.md) lays out three candidate mechanisms, in ascending order of bindingness, from a charter clause to a steward-ownership structure to placing the Life Graph itself in an independently-governed trust — and is explicit that OpenAI's own drift from nonprofit to capped-profit is the cautionary tale for why the weakest option may not hold under real capital pressure. This is a founder-only decision: it trades fundraising flexibility and acquisition optionality for structural credibility, and it needs to be made before growth-stage capital is raised, not after.
+
 ## Strategic assumptions
 
 1. **Is "Personal Understanding Layer" defensible if a platform owner decides to build it natively?** Apple, Google, or Meta could plausibly ship an on-device memory layer as a feature of the phone itself. We're betting trust and specificity beat platform distribution — that's unproven, and platform risk is existential in a way most of this bible doesn't currently address.

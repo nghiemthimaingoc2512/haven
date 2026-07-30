@@ -31,6 +31,10 @@ Haven was originally strongest on bad days — the magic moment in [09-user-jour
 - **No impersonation of humanity.** Haven never claims or implies it is a person. *(Brand voice, mission)*
 - **No push-notification guilt mechanics.** No streaks, no "we miss you," no unread-style pressure. *(Mission commitment)*
 
+## Flag: the off-ramp claim, not just the feature, moves up *(added after [25-the-existential-test.md](25-the-existential-test.md))*
+
+The therapist bridge below is still sequenced as post-MVP — building it well takes time, and that hasn't changed. But the underlying claim it supports — that Haven's success is measured by people needing it less, not more — is now the sharpest available differentiator against ad-funded and usage-justified competitors, who cannot credibly make that claim without cannibalizing their own metrics. That claim should be stated plainly from day one, in the first-use disclosure and in how the product talks about itself, well before the full feature behind it ships. The feature can wait for Phase 3; the promise shouldn't.
+
 ## Depth (post-MVP, see [16-roadmap.md](16-roadmap.md))
 
 - **Voice mode**, for people for whom typing is a barrier to actually saying the thing.
