@@ -7,6 +7,7 @@ import { useMemories } from "@/lib/storage";
 import { useDayPeriod, computeStreak } from "@/lib/insights";
 import { getTide, useDailyQuote } from "@/lib/tides";
 import { Moon } from "@/components/Moon";
+import { EmotionBadge } from "@/components/EmotionBadge";
 
 const TIDE_BG: Record<string, string> = {
   "soft-blue": "bg-soft-blue/40",
@@ -61,6 +62,13 @@ export default function HomePage() {
         </p>
         <p className="mt-2 font-serif text-2xl text-ink">{tide.name}</p>
         <p className="mt-1 text-sm text-ink/80">{tide.description}</p>
+        {latest?.emotionKey && (
+          <EmotionBadge
+            emotionKey={latest.emotionKey}
+            lang={lang}
+            className="mt-3 bg-card/60"
+          />
+        )}
       </div>
 
       {/* Glow of the Day */}

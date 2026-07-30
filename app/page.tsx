@@ -74,7 +74,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep("name")}
-              className="mt-8 rounded-full bg-primary px-8 py-3 text-white transition-colors hover:bg-primary-hover"
+              className="mt-8 haven-cta rounded-full bg-primary px-8 py-3 text-white hover:bg-primary-hover"
             >
               {t.onboardingContinue}
             </button>
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
               disabled={!name.trim()}
               className={`mt-10 rounded-full px-8 py-3 transition-colors ${
                 name.trim()
-                  ? "bg-primary text-white hover:bg-primary-hover"
+                  ? "haven-cta bg-primary text-white hover:bg-primary-hover"
                   : "cursor-not-allowed bg-line text-muted"
               }`}
             >
@@ -142,7 +142,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep("appearance")}
-              className="mt-10 rounded-full bg-primary px-8 py-3 text-white transition-colors hover:bg-primary-hover"
+              className="mt-10 haven-cta rounded-full bg-primary px-8 py-3 text-white hover:bg-primary-hover"
             >
               {t.onboardingContinue}
             </button>
@@ -175,7 +175,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={() => setStep("home")}
-              className="mt-10 rounded-full bg-primary px-8 py-3 text-white transition-colors hover:bg-primary-hover"
+              className="mt-10 haven-cta rounded-full bg-primary px-8 py-3 text-white hover:bg-primary-hover"
             >
               {t.onboardingContinue}
             </button>
@@ -195,7 +195,7 @@ export default function OnboardingPage() {
             <button
               type="button"
               onClick={handleEnter}
-              className="mt-10 rounded-full bg-primary px-8 py-3 text-white transition-colors hover:bg-primary-hover"
+              className="mt-10 haven-cta rounded-full bg-primary px-8 py-3 text-white hover:bg-primary-hover"
             >
               {t.onboardingEnter}
             </button>

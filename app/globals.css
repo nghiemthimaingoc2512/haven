@@ -2,37 +2,43 @@
 
 :root {
   --ink: #2b2640;
-  --paper: #fcfbff;
+  --paper: #faf8ff;
   --card: #ffffff;
-  --line: #e9e4fa;
-  --primary: #a49af9;
-  --primary-hover: #968af5;
-  --primary-pressed: #8477f2;
-  --secondary: #c8b7ff;
-  --accent-pink: #f7c7e8;
+  --moon-glow: #f7f3ff;
+  --line: #e4dcff;
+  --primary: #8e72ff;
+  --primary-hover: #7c5fff;
+  --primary-pressed: #6b4ef0;
+  --secondary: #a78bfa;
+  --lavender: #c8b6ff;
+  --accent-pink: #ffd7f2;
   --soft-blue: #cfe7ff;
+  --night-indigo: #3e3276;
   --signal: #e0607a;
   --muted: #8b85a3;
   /* Constant across light/dark/night — the mascot's face needs to read
      against its own lavender gradient regardless of site theme. */
-  --moon-face: #3d3560;
+  --moon-face: #352a5c;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --ink: #f1eeff;
-    --paper: #17172a;
-    --card: #211f3a;
-    --line: color-mix(in srgb, #a49af9 25%, transparent);
-    --primary: #b9afff;
-    --primary-hover: #c6bdff;
-    --primary-pressed: #a89dff;
-    --secondary: #d8cdff;
-    --accent-pink: #f0b8e0;
+    --paper: #1a1435;
+    --card: #3e3276;
+    --moon-glow: #2a2350;
+    --line: color-mix(in srgb, #8e72ff 30%, transparent);
+    --primary: #a78bfa;
+    --primary-hover: #b79cff;
+    --primary-pressed: #9678f2;
+    --secondary: #c8b6ff;
+    --lavender: #d9cbff;
+    --accent-pink: #f5b8e0;
     --soft-blue: #b9d6f5;
+    --night-indigo: #3e3276;
     --signal: #eb7f97;
-    --muted: #9e97c2;
+    --muted: #a79bd6;
     color-scheme: dark;
   }
 }
@@ -42,31 +48,37 @@
    app/layout.tsx. */
 :root[data-theme="dark"] {
   --ink: #f1eeff;
-  --paper: #17172a;
-  --card: #211f3a;
-  --line: color-mix(in srgb, #a49af9 25%, transparent);
-  --primary: #b9afff;
-  --primary-hover: #c6bdff;
-  --primary-pressed: #a89dff;
-  --secondary: #d8cdff;
-  --accent-pink: #f0b8e0;
+  --paper: #1a1435;
+  --card: #3e3276;
+  --moon-glow: #2a2350;
+  --line: color-mix(in srgb, #8e72ff 30%, transparent);
+  --primary: #a78bfa;
+  --primary-hover: #b79cff;
+  --primary-pressed: #9678f2;
+  --secondary: #c8b6ff;
+  --lavender: #d9cbff;
+  --accent-pink: #f5b8e0;
   --soft-blue: #b9d6f5;
+  --night-indigo: #3e3276;
   --signal: #eb7f97;
-  --muted: #9e97c2;
+  --muted: #a79bd6;
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
   --ink: #2b2640;
-  --paper: #fcfbff;
+  --paper: #faf8ff;
   --card: #ffffff;
-  --line: #e9e4fa;
-  --primary: #a49af9;
-  --primary-hover: #968af5;
-  --primary-pressed: #8477f2;
-  --secondary: #c8b7ff;
-  --accent-pink: #f7c7e8;
+  --moon-glow: #f7f3ff;
+  --line: #e4dcff;
+  --primary: #8e72ff;
+  --primary-hover: #7c5fff;
+  --primary-pressed: #6b4ef0;
+  --secondary: #a78bfa;
+  --lavender: #c8b6ff;
+  --accent-pink: #ffd7f2;
   --soft-blue: #cfe7ff;
+  --night-indigo: #3e3276;
   --signal: #e0607a;
   --muted: #8b85a3;
   color-scheme: light;
@@ -76,13 +88,16 @@
   --color-ink: var(--ink);
   --color-paper: var(--paper);
   --color-card: var(--card);
+  --color-moon-glow: var(--moon-glow);
   --color-line: var(--line);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
   --color-primary-pressed: var(--primary-pressed);
   --color-secondary: var(--secondary);
+  --color-lavender: var(--lavender);
   --color-accent-pink: var(--accent-pink);
   --color-soft-blue: var(--soft-blue);
+  --color-night-indigo: var(--night-indigo);
   --color-signal: var(--signal);
   --color-muted: var(--muted);
   --font-serif: var(--font-newsreader), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -168,6 +183,27 @@ a {
   }
 }
 
+@keyframes haven-blink {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  96% {
+    transform: scaleY(0.1);
+  }
+}
+
+@keyframes haven-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-wave {
     animation: haven-wave 1s ease-in-out infinite;
@@ -192,29 +228,66 @@ a {
   .animate-drift {
     animation: haven-drift 12s ease-in-out infinite alternate;
   }
+
+  .animate-blink {
+    animation: haven-blink 5.5s ease-in-out infinite;
+    transform-origin: center;
+  }
+
+  .animate-glow-pulse {
+    animation: haven-glow-pulse 3.5s ease-in-out infinite;
+  }
 }
 
 .mic-glow {
   box-shadow:
-    0 0 0 10px color-mix(in srgb, var(--primary) 15%, transparent),
-    0 0 32px 8px color-mix(in srgb, var(--primary) 25%, transparent);
+    0 0 0 10px color-mix(in srgb, var(--primary) 18%, transparent),
+    0 0 36px 10px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
-/* Floating / glass surface — white, blurred, soft lavender border. */
+/* Floating / glass surface — glassmorphism with real glow, not just a border. */
 .haven-surface {
-  background: color-mix(in srgb, var(--card) 92%, transparent);
+  background: color-mix(in srgb, var(--card) 88%, var(--moon-glow) 12%);
   border: 1px solid var(--line);
-  box-shadow: 0 12px 32px -14px color-mix(in srgb, var(--primary) 35%, transparent);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 16px 40px -16px color-mix(in srgb, var(--primary) 40%, transparent),
+    0 2px 8px -2px color-mix(in srgb, var(--night-indigo) 15%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 40%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 
 /* Soft moonlit gradient wash used behind hero/onboarding moments. */
 .haven-moonlight {
   background: radial-gradient(
     ellipse 120% 80% at 50% -10%,
-    color-mix(in srgb, var(--secondary) 35%, transparent),
+    color-mix(in srgb, var(--lavender) 40%, transparent),
     transparent 65%
   ),
   linear-gradient(180deg, var(--paper), var(--paper) 60%, color-mix(in srgb, var(--soft-blue) 25%, var(--paper)));
+}
+
+/* Deep night-sky wash — Night Indigo + stars, used after 9pm and in Night Mode UI. */
+.haven-night-sky {
+  background: radial-gradient(
+    ellipse 130% 90% at 50% -20%,
+    color-mix(in srgb, var(--night-indigo) 55%, transparent),
+    transparent 70%
+  ),
+  linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--night-indigo) 35%, var(--paper)));
+}
+
+/* Shared "alive" CTA treatment — gentle lift + glow on hover, soft press. */
+.haven-cta {
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
+}
+
+.haven-cta:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+.haven-cta:active {
+  transform: translateY(0) scale(0.98);
 }

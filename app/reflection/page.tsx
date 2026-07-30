@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useMemories } from "@/lib/storage";
 import { Moon } from "@/components/Moon";
+import { EmotionBadge } from "@/components/EmotionBadge";
 
 export default function ReflectionPage() {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const memories = useMemories();
   const latest = memories[0] ?? null;
   const previous = memories[1] ?? null;
@@ -87,6 +88,18 @@ export default function ReflectionPage() {
             <p className="mt-8 text-sm text-muted">
               {savedState === "remembering" ? t.willRemember : t.savedLabel}
             </p>
+
+            {savedState === "saved" && latest.emotionKey && (
+              <div className="animate-rise mt-4 flex flex-col items-center gap-2 border-t border-line pt-4 text-center">
+                <EmotionBadge
+                  emotionKey={latest.emotionKey}
+                  lang={lang}
+                  confidence={latest.confidence}
+                  confidenceLabel={t.confidenceLabel}
+                />
+                <p className="text-xs text-muted">{t.savedToJourney}</p>
+              </div>
+            )}
           </div>
 
           <div className="mt-8 flex justify-center">

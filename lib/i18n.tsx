@@ -98,6 +98,8 @@ export interface Copy {
   nightPromptBody: string;
   nightPromptAccept: string;
   nightPromptLater: string;
+  confidenceLabel: string;
+  savedToJourney: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -186,6 +188,8 @@ const dictionary: Record<Lang, Copy> = {
     nightPromptBody: "Bạn có muốn Haven dịu lại một chút cho buổi tối không? Đây là lúc tốt để chậm lại.",
     nightPromptAccept: "Chuyển sang chế độ đêm",
     nightPromptLater: "Để sau",
+    confidenceLabel: "Mức độ chắc chắn",
+    savedToJourney: "Đã lưu vào hành trình cảm xúc của bạn.",
   },
   en: {
     brand: "Haven",
@@ -273,6 +277,8 @@ const dictionary: Record<Lang, Copy> = {
     nightPromptBody: "Would you like Haven to become a little quieter for the night? This is a good time to slow down.",
     nightPromptAccept: "Switch to Night Mode",
     nightPromptLater: "Maybe later",
+    confidenceLabel: "How sure I am",
+    savedToJourney: "Saved to your emotional journey.",
   },
 };
 

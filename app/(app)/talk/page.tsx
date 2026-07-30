@@ -235,6 +235,9 @@ function TalkPageInner() {
           reflection: generated.reflection,
           standout: generated.standout,
           emotion: generated.emotion,
+          emotionKey: generated.emotionKey,
+          intensity: generated.intensity,
+          confidence: generated.confidence,
           topics: generated.topics,
           people: generated.people,
         });
@@ -405,9 +408,9 @@ function TalkPageInner() {
                 type="button"
                 onClick={handleFinish}
                 disabled={!hasMeaningfulContent}
-                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm transition-opacity ${
+                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm ${
                   hasMeaningfulContent
-                    ? "bg-primary text-paper hover:opacity-90"
+                    ? "haven-cta bg-primary text-paper hover:opacity-90"
                     : "cursor-not-allowed bg-line text-muted"
                 }`}
               >

@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import type { Lang } from "@/lib/i18n";
+import type { EmotionKey, Intensity } from "@/lib/emotions";
 
 export interface Memory {
   id: string;
@@ -11,6 +12,10 @@ export interface Memory {
   reflection: string;
   standout: string | null;
   emotion: string;
+  // optional: absent on memories saved before the emotion taxonomy existed
+  emotionKey?: EmotionKey;
+  intensity?: Intensity;
+  confidence?: number;
   topics: string[];
   people: string[];
 }

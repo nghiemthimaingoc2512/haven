@@ -1,9 +1,13 @@
 import type { Lang } from "@/lib/i18n";
+import type { EmotionKey, Intensity } from "@/lib/emotions";
 
 export interface GeneratedReflection {
   reflection: string;
   standout: string | null;
   emotion: string;
+  emotionKey: EmotionKey;
+  intensity: Intensity;
+  confidence: number;
   topics: string[];
   people: string[];
 }
@@ -12,9 +16,8 @@ export interface GeneratedReflection {
  * Stands in for the real AI pipeline (see docs/11-product-prd.md §2.3).
  * Everything here is genuine, simple text analysis — word frequency, keyword
  * matching — not a real understanding of what was said. It is deliberately
- * kept honest about that: no fabricated confidence, just light structure so
- * the rest of the product (memory, history, the reflection card) has
- * something real to work with while the actual model integration is built.
+ * kept honest about that: confidence and intensity are derived from how many
+ * real keyword matches supported the detection, not fabricated numbers.
  */
 
 const STOPWORDS_VI = new Set([
@@ -29,6 +32,22 @@ const STOPWORDS_EN = new Set([
   "was", "for", "on", "with", "as", "be", "this", "have", "not", "are",
   "but", "my", "me", "so", "just", "at", "an", "or", "if", "we", "do",
 ]);
+
+// internal bucket -> fixed emotion taxonomy key (see lib/emotions.ts)
+const EMOTION_KEY_BY_BUCKET: Record<string, EmotionKey> = {
+  "kiệt sức": "overwhelmed",
+  exhausted: "overwhelmed",
+  "buồn bã": "sad",
+  sad: "sad",
+  "lo lắng": "anxious",
+  anxious: "anxious",
+  "cô đơn": "sad",
+  lonely: "sad",
+  "khó chịu": "frustrated",
+  frustrated: "frustrated",
+  "nhẹ nhõm": "calm",
+  relieved: "calm",
+};
 
 const EMOTION_KEYWORDS_VI: Array<[string[], string]> = [
   [["mệt", "mệt mỏi", "kiệt sức"], "kiệt sức"],
@@ -92,46 +111,69 @@ function findStandoutWord(text: string, lang: Lang): string | null {
   return best;
 }
 
-function matchKeywords(text: string, table: Array<[string[], string]>): string[] {
+interface KeywordMatch {
+  label: string;
+  matchedKeywordCount: number;
+}
+
+/** Returns each matching bucket's label plus how many of its own keywords actually matched — the real signal behind confidence/intensity. */
+function matchKeywordsWithStrength(
+  text: string,
+  table: Array<[string[], string]>,
+): KeywordMatch[] {
   const lower = text.toLowerCase();
-  const matches: string[] = [];
+  const matches: KeywordMatch[] = [];
   for (const [keywords, label] of table) {
-    if (keywords.some((k) => lower.includes(k))) matches.push(label);
+    const matchedKeywordCount = keywords.filter((k) => lower.includes(k)).length;
+    if (matchedKeywordCount > 0) matches.push({ label, matchedKeywordCount });
   }
   return matches;
 }
 
-const REFLECTION_OPENERS_VI: Record<string, string> = {
-  "kiệt sức": "Mình nghe thấy rồi. Có vẻ như hôm nay là một ngày nặng nề, và bạn đã một mình gánh khá nhiều thứ.",
-  "buồn bã": "Mình nghe thấy rồi. Điều bạn vừa chia sẻ nghe thật không dễ dàng.",
-  "lo lắng": "Mình nghe thấy rồi. Có vẻ như có điều gì đó cứ quanh quẩn trong đầu bạn mãi không thôi.",
-  "cô đơn": "Mình nghe thấy rồi. Nghe như bạn đã giữ điều này một mình khá lâu rồi.",
-  "khó chịu": "Mình nghe thấy rồi. Có vẻ như điều đó thực sự làm bạn khó chịu.",
-  "nhẹ nhõm": "Mình nghe thấy rồi. Nghe có vẻ như hôm nay nhẹ nhàng hơn một chút với bạn.",
-  default: "Mình nghe thấy rồi. Cảm ơn bạn đã dành thời gian nói ra điều này.",
+const REFLECTION_LINES_VI: Record<string, string> = {
+  "kiệt sức": "Có vẻ như hôm nay là một ngày nặng nề, và bạn đã một mình gánh khá nhiều thứ.",
+  "buồn bã": "Điều bạn vừa chia sẻ nghe thật không dễ dàng.",
+  "lo lắng": "Có vẻ như có điều gì đó cứ quanh quẩn trong đầu bạn mãi không thôi.",
+  "cô đơn": "Nghe như bạn đã giữ điều này một mình khá lâu rồi.",
+  "khó chịu": "Có vẻ như điều đó thực sự làm bạn khó chịu.",
+  "nhẹ nhõm": "Nghe có vẻ như hôm nay nhẹ nhàng hơn một chút với bạn.",
+  default: "Cảm ơn bạn đã dành thời gian nói ra điều này.",
 };
 
-const REFLECTION_OPENERS_EN: Record<string, string> = {
-  exhausted: "I hear you. Today sounds like it's been heavy, and you've been carrying a lot of it alone.",
-  sad: "I hear you. What you just shared doesn't sound easy.",
-  anxious: "I hear you. It sounds like something has been circling in your mind.",
-  lonely: "I hear you. It sounds like you've been holding this by yourself for a while.",
-  frustrated: "I hear you. That sounds like it really got to you.",
-  relieved: "I hear you. Today sounds like it was a little lighter.",
-  default: "I hear you. Thank you for taking the time to say this.",
+const REFLECTION_LINES_EN: Record<string, string> = {
+  exhausted: "Today sounds like it's been heavy, and you've been carrying a lot of it alone.",
+  sad: "What you just shared doesn't sound easy.",
+  anxious: "It sounds like something has been circling in your mind.",
+  lonely: "It sounds like you've been holding this by yourself for a while.",
+  frustrated: "That sounds like it really got to you.",
+  relieved: "Today sounds like it was a little lighter.",
+  default: "Thank you for taking the time to say this.",
 };
 
+const LISTENED_PREFIX_VI = "Mình đã lắng nghe hết rồi.";
+const LISTENED_PREFIX_EN = "I've been listening. I heard everything.";
 const CLOSING_VI = "Cảm ơn bạn đã tin tưởng chia sẻ điều này.";
 const CLOSING_EN = "Thank you for trusting me with this.";
 
 export function generateReflection(transcript: string, lang: Lang): GeneratedReflection {
-  const emotionMatches = matchKeywords(
+  const emotionMatches = matchKeywordsWithStrength(
     transcript,
     lang === "vi" ? EMOTION_KEYWORDS_VI : EMOTION_KEYWORDS_EN,
-  );
-  const emotion = emotionMatches[0] ?? (lang === "vi" ? "đang suy ngẫm" : "reflective");
+  ).sort((a, b) => b.matchedKeywordCount - a.matchedKeywordCount);
 
-  const topics = matchKeywords(transcript, lang === "vi" ? TOPIC_KEYWORDS_VI : TOPIC_KEYWORDS_EN);
+  const topMatch = emotionMatches[0] ?? null;
+  const emotion = topMatch?.label ?? (lang === "vi" ? "đang suy ngẫm" : "reflective");
+  const emotionKey: EmotionKey = topMatch ? (EMOTION_KEY_BY_BUCKET[topMatch.label] ?? "neutral") : "neutral";
+
+  // confidence/intensity are derived from real signal strength: how many of a
+  // bucket's own keywords matched, never a fabricated number
+  const strength = topMatch?.matchedKeywordCount ?? 0;
+  const confidence = topMatch ? Math.min(0.55 + strength * 0.15, 0.92) : 0.45;
+  const intensity: Intensity = strength >= 2 ? "high" : strength === 1 ? "medium" : "low";
+
+  const topics = matchKeywordsWithStrength(transcript, lang === "vi" ? TOPIC_KEYWORDS_VI : TOPIC_KEYWORDS_EN).map(
+    (m) => m.label,
+  );
   if (topics.length === 0) topics.push(lang === "vi" ? "cuộc sống" : "life");
 
   const peopleList = lang === "vi" ? PEOPLE_KEYWORDS_VI : PEOPLE_KEYWORDS_EN;
@@ -145,11 +187,12 @@ export function generateReflection(transcript: string, lang: Lang): GeneratedRef
       : `You mentioned "${standoutWord}" a few times. Maybe that's worth noticing.`
     : null;
 
-  const openers = lang === "vi" ? REFLECTION_OPENERS_VI : REFLECTION_OPENERS_EN;
-  const opener = openers[emotion] ?? openers.default;
+  const lines = lang === "vi" ? REFLECTION_LINES_VI : REFLECTION_LINES_EN;
+  const line = lines[emotion] ?? lines.default;
+  const prefix = lang === "vi" ? LISTENED_PREFIX_VI : LISTENED_PREFIX_EN;
   const closing = lang === "vi" ? CLOSING_VI : CLOSING_EN;
 
-  const reflection = [opener, closing].join(" ");
+  const reflection = [prefix, line, closing].join(" ");
 
-  return { reflection, standout, emotion, topics, people };
+  return { reflection, standout, emotion, emotionKey, intensity, confidence, topics, people };
 }

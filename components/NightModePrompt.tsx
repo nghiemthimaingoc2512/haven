@@ -70,7 +70,7 @@ export function NightModePrompt() {
           <button
             type="button"
             onClick={handleAccept}
-            className="rounded-full bg-primary px-6 py-3 text-white transition-colors hover:bg-primary-hover"
+            className="haven-cta rounded-full bg-primary px-6 py-3 text-white hover:bg-primary-hover"
           >
             {t.nightPromptAccept}
           </button>
