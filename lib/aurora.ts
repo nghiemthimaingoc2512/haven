@@ -1,9 +1,9 @@
 import type { Lang } from "@/lib/i18n";
 
 export interface AuroraResponse {
-  reframe: string;
+  reasoning: string;
   considerations: string[];
-  nextStep: string;
+  recommendation: string;
   optionsDetected: [string, string] | null;
 }
 
@@ -54,61 +54,90 @@ const REFRAME_EN = {
 function considerationsFor(
   type: "decision" | "planning" | "general",
   options: [string, string] | null,
+  context: string,
   lang: Lang,
 ): string[] {
+  const contextLine = context.trim()
+    ? lang === "vi"
+      ? [`Bạn vừa nhắc đến: "${context.trim()}" — điều đó ảnh hưởng thế nào đến hướng bạn chọn?`]
+      : [`You mentioned: "${context.trim()}" — how does that shape which way you lean?`]
+    : [];
+
   if (options) {
     const [a, b] = options;
-    return lang === "vi"
-      ? [
-          `${a} có thể mang lại điều gì mà ${b} không có?`,
-          `${b} có thể mang lại điều gì mà ${a} không có?`,
-          "Lựa chọn nào khiến bạn thấy nhẹ nhõm hơn khi tưởng tượng một năm sau?",
-        ]
-      : [
-          `What might ${a} give you that ${b} doesn't?`,
-          `What might ${b} give you that ${a} doesn't?`,
-          "Which choice feels lighter when you imagine it a year from now?",
-        ];
+    return [
+      ...(lang === "vi"
+        ? [
+            `${a} có thể mang lại điều gì mà ${b} không có?`,
+            `${b} có thể mang lại điều gì mà ${a} không có?`,
+            "Lựa chọn nào khiến bạn thấy nhẹ nhõm hơn khi tưởng tượng một năm sau?",
+          ]
+        : [
+            `What might ${a} give you that ${b} doesn't?`,
+            `What might ${b} give you that ${a} doesn't?`,
+            "Which choice feels lighter when you imagine it a year from now?",
+          ]),
+      ...contextLine,
+    ];
   }
   if (type === "planning") {
-    return lang === "vi"
+    return [
+      ...(lang === "vi"
+        ? [
+            "Bước nào trong kế hoạch này thực sự phụ thuộc vào người khác?",
+            "Nếu tuần này không hoàn hảo, điều gì vẫn được coi là tiến bộ?",
+            "Bạn đang lên kế hoạch cho điều mình muốn, hay điều mình nghĩ nên muốn?",
+          ]
+        : [
+            "Which part of this plan actually depends on someone else?",
+            "If this week isn't perfect, what would still count as progress?",
+            "Are you planning for what you want, or what you think you should want?",
+          ]),
+      ...contextLine,
+    ];
+  }
+  return [
+    ...(lang === "vi"
       ? [
-          "Bước nào trong kế hoạch này thực sự phụ thuộc vào người khác?",
-          "Nếu tuần này không hoàn hảo, điều gì vẫn được coi là tiến bộ?",
-          "Bạn đang lên kế hoạch cho điều mình muốn, hay điều mình nghĩ nên muốn?",
+          "Điều gì thực sự quan trọng với bạn trong chuyện này?",
+          "Nếu một người bạn thân đang ở vị trí của bạn, bạn sẽ khuyên họ điều gì?",
+          "Có nỗi sợ nào đang âm thầm ảnh hưởng đến điều này không?",
         ]
       : [
-          "Which part of this plan actually depends on someone else?",
-          "If this week isn't perfect, what would still count as progress?",
-          "Are you planning for what you want, or what you think you should want?",
-        ];
-  }
-  return lang === "vi"
-    ? [
-        "Điều gì thực sự quan trọng với bạn trong chuyện này?",
-        "Nếu một người bạn thân đang ở vị trí của bạn, bạn sẽ khuyên họ điều gì?",
-        "Có nỗi sợ nào đang âm thầm ảnh hưởng đến điều này không?",
-      ]
-    : [
-        "What actually matters to you here?",
-        "If a close friend were in your position, what would you tell them?",
-        "Is there a quiet fear shaping this more than you'd like?",
-      ];
+          "What actually matters to you here?",
+          "If a close friend were in your position, what would you tell them?",
+          "Is there a quiet fear shaping this more than you'd like?",
+        ]),
+    ...contextLine,
+  ];
 }
 
-const NEXT_STEP_VI =
+const RECOMMENDATION_VI =
   "Thử viết ra 3 điều bạn thực sự muốn trong chuyện này — không phải điều người khác mong đợi ở bạn.";
-const NEXT_STEP_EN =
+const RECOMMENDATION_EN =
   "Try writing down 3 things you actually want here — not what you think others expect of you.";
 
-export function generateAdvice(question: string, lang: Lang): AuroraResponse {
+/**
+ * Aurora's workspace stages: Problem (the `question` argument, echoed by the
+ * caller) → Context/Goal (real optional input, both fed back into the
+ * output below rather than collected and discarded) → Options (detected
+ * from the problem text) → Reasoning → Recommendation.
+ */
+export function generateAdvice(question: string, context: string, goal: string, lang: Lang): AuroraResponse {
   const type = detectQueryType(question, lang);
   const options = detectOptions(question, lang);
-  const reframe = (lang === "vi" ? REFRAME_VI : REFRAME_EN)[type];
-  const considerations = considerationsFor(type, options, lang);
-  const nextStep = lang === "vi" ? NEXT_STEP_VI : NEXT_STEP_EN;
+  const reasoning = (lang === "vi" ? REFRAME_VI : REFRAME_EN)[type];
+  const considerations = considerationsFor(type, options, context, lang);
 
-  return { reframe, considerations, nextStep, optionsDetected: options };
+  const base = lang === "vi" ? RECOMMENDATION_VI : RECOMMENDATION_EN;
+  const goalLine = goal.trim()
+    ? lang === "vi"
+      ? ` Hãy giữ mục tiêu này trong đầu: "${goal.trim()}".`
+      : ` Keep this goal in mind: "${goal.trim()}".`
+    : "";
+  const recommendation = base + goalLine;
+
+  return { reasoning, considerations, recommendation, optionsDetected: options };
 }
 
 export function starterPrompts(lang: Lang): string[] {

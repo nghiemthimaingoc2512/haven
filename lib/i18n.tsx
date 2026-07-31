@@ -103,9 +103,15 @@ export interface Copy {
   auroraIntro: string;
   auroraPlaceholder: string;
   auroraSend: string;
-  auroraReframeLabel: string;
+  auroraProblemLabel: string;
+  auroraContextLabel: string;
+  auroraContextPlaceholder: string;
+  auroraGoalLabel: string;
+  auroraGoalPlaceholder: string;
+  auroraOptionsLabel: string;
+  auroraReasoningLabel: string;
   auroraConsiderLabel: string;
-  auroraNextStepLabel: string;
+  auroraRecommendationLabel: string;
   auroraNewQuestion: string;
   auroraTryPrompt: string;
   constellationEmpty: string;
@@ -137,6 +143,12 @@ export interface Copy {
   meSupportBody: string;
   carryAloneLine: string;
   breatheTogetherLine: string;
+  emotionInsightsTitle: string;
+  emotionAverageMood: string;
+  emotionStreakLabel: string;
+  emotionWeeklyTrend: string;
+  emotionMoodCalendar: string;
+  emotionNoDataYet: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -230,9 +242,15 @@ const dictionary: Record<Lang, Copy> = {
     auroraIntro: "Mình ở đây để cùng bạn suy nghĩ.",
     auroraPlaceholder: "Bạn đang phân vân điều gì?",
     auroraSend: "Hỏi Aurora",
-    auroraReframeLabel: "Thử nghĩ theo hướng này",
+    auroraProblemLabel: "Vấn đề",
+    auroraContextLabel: "Bối cảnh (không bắt buộc)",
+    auroraContextPlaceholder: "Có gì phía sau chuyện này mà đáng để biết không?",
+    auroraGoalLabel: "Mục tiêu (không bắt buộc)",
+    auroraGoalPlaceholder: "Một kết quả tốt sẽ trông như thế nào?",
+    auroraOptionsLabel: "Các lựa chọn",
+    auroraReasoningLabel: "Góc nhìn của Aurora",
     auroraConsiderLabel: "Vài điều đáng cân nhắc",
-    auroraNextStepLabel: "Một bước nhỏ",
+    auroraRecommendationLabel: "Gợi ý",
     auroraNewQuestion: "Hỏi điều khác",
     auroraTryPrompt: "Hoặc thử một trong số này:",
     constellationEmpty: "Bầu trời vẫn còn trống. Mỗi cuộc trò chuyện sẽ trở thành một ngôi sao.",
@@ -264,6 +282,12 @@ const dictionary: Record<Lang, Copy> = {
     meSupportBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
     carryAloneLine: "Bạn không cần phải một mình gánh mọi thứ.",
     breatheTogetherLine: "Hãy cùng thở nhé.",
+    emotionInsightsTitle: "Hành trình cảm xúc",
+    emotionAverageMood: "Tâm trạng trung bình (30 ngày)",
+    emotionStreakLabel: "Ngày liên tiếp",
+    emotionWeeklyTrend: "8 tuần gần đây",
+    emotionMoodCalendar: "Lịch tâm trạng tháng này",
+    emotionNoDataYet: "Chưa có đủ dữ liệu để hiển thị.",
   },
   en: {
     brand: "Haven",
@@ -356,9 +380,15 @@ const dictionary: Record<Lang, Copy> = {
     auroraIntro: "I'm here to think alongside you.",
     auroraPlaceholder: "What are you weighing right now?",
     auroraSend: "Ask Aurora",
-    auroraReframeLabel: "Try thinking about it this way",
+    auroraProblemLabel: "Problem",
+    auroraContextLabel: "Context (optional)",
+    auroraContextPlaceholder: "Any background that matters here?",
+    auroraGoalLabel: "Goal (optional)",
+    auroraGoalPlaceholder: "What would a good outcome look like?",
+    auroraOptionsLabel: "Options",
+    auroraReasoningLabel: "Aurora's take",
     auroraConsiderLabel: "A few things worth considering",
-    auroraNextStepLabel: "One small step",
+    auroraRecommendationLabel: "Recommendation",
     auroraNewQuestion: "Ask something else",
     auroraTryPrompt: "Or try one of these:",
     constellationEmpty: "The sky is still empty. Every conversation becomes a star.",
@@ -390,6 +420,12 @@ const dictionary: Record<Lang, Copy> = {
     meSupportBody: "This is a prototype — there's no official support channel yet.",
     carryAloneLine: "You don't have to carry everything alone.",
     breatheTogetherLine: "Let's breathe together.",
+    emotionInsightsTitle: "Emotional Journey",
+    emotionAverageMood: "Average mood (30 days)",
+    emotionStreakLabel: "Day streak",
+    emotionWeeklyTrend: "Last 8 weeks",
+    emotionMoodCalendar: "This month's mood calendar",
+    emotionNoDataYet: "Not enough data to show yet.",
   },
 };
 

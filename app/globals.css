@@ -6,9 +6,9 @@
   --card: #ffffff;
   --moon-glow: #f8f4ff;
   --line: #e4dcff;
-  --primary: #8e72ff;
-  --primary-hover: #7c5fff;
-  --primary-pressed: #6b4ef0;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-pressed: #6d28d9;
   --secondary: #a78bfa;
   --lavender: #d9ccff;
   --accent-pink: #ffd7f2;
@@ -17,6 +17,8 @@
   --star: #ffe9a8;
   --signal: #e0607a;
   --muted: #8b85a3;
+  /* Constant across light/dark/night — the mascot's glow ring after 9pm. */
+  --night-glow: #6d5bd0;
   /* Constant across light/dark/night — the mascot's face needs to read
      against its own lavender gradient regardless of site theme. */
   --moon-face: #352a5c;
@@ -29,10 +31,10 @@
     --paper: #180f38;
     --card: #30265f;
     --moon-glow: #241a4d;
-    --line: color-mix(in srgb, #8e72ff 30%, transparent);
+    --line: color-mix(in srgb, #8b5cf6 30%, transparent);
     --primary: #a78bfa;
-    --primary-hover: #b79cff;
-    --primary-pressed: #9678f2;
+    --primary-hover: #b794f6;
+    --primary-pressed: #9f7aea;
     --secondary: #c8b6ff;
     --lavender: #d9cbff;
     --accent-pink: #f5b8e0;
@@ -53,10 +55,10 @@
   --paper: #180f38;
   --card: #30265f;
   --moon-glow: #241a4d;
-  --line: color-mix(in srgb, #8e72ff 30%, transparent);
+  --line: color-mix(in srgb, #8b5cf6 30%, transparent);
   --primary: #a78bfa;
-  --primary-hover: #b79cff;
-  --primary-pressed: #9678f2;
+  --primary-hover: #b794f6;
+  --primary-pressed: #9f7aea;
   --secondary: #c8b6ff;
   --lavender: #d9cbff;
   --accent-pink: #f5b8e0;
@@ -74,9 +76,9 @@
   --card: #ffffff;
   --moon-glow: #f8f4ff;
   --line: #e4dcff;
-  --primary: #8e72ff;
-  --primary-hover: #7c5fff;
-  --primary-pressed: #6b4ef0;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-pressed: #6d28d9;
   --secondary: #a78bfa;
   --lavender: #d9ccff;
   --accent-pink: #ffd7f2;
@@ -105,6 +107,7 @@
   --color-star: var(--star);
   --color-signal: var(--signal);
   --color-muted: var(--muted);
+  --color-night-glow: var(--night-glow);
   --font-serif: var(--font-newsreader), "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -209,6 +212,27 @@ a {
   }
 }
 
+/* Mascot wrapper only — never applied to the artwork itself. */
+@keyframes haven-mascot-breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) scale(1.015);
+  }
+}
+
+@keyframes haven-mascot-sway {
+  0%,
+  100% {
+    transform: rotate(-1.5deg);
+  }
+  50% {
+    transform: rotate(1.5deg);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .animate-wave {
     animation: haven-wave 1s ease-in-out infinite;
@@ -241,6 +265,18 @@ a {
 
   .animate-glow-pulse {
     animation: haven-glow-pulse 3.5s ease-in-out infinite;
+  }
+
+  .animate-mascot-breathe {
+    animation: haven-mascot-breathe 5s ease-in-out infinite;
+  }
+
+  .animate-mascot-breathe-slow {
+    animation: haven-mascot-breathe 8s ease-in-out infinite;
+  }
+
+  .animate-mascot-sway {
+    animation: haven-mascot-sway 7s ease-in-out infinite;
   }
 
   /* Night Mode moves slower than the daytime app — everything quieter. */

@@ -1,15 +1,16 @@
 import type { Lang } from "@/lib/i18n";
 import type { Memory } from "@/lib/storage";
+import type { EmotionKey } from "@/lib/emotions";
 
 export type ConstellationCategory =
-  | "dreams"
-  | "career"
-  | "healing"
-  | "family"
-  | "travel"
-  | "friends"
   | "growth"
-  | "love";
+  | "love"
+  | "career"
+  | "family"
+  | "health"
+  | "dreams"
+  | "stress"
+  | "joy";
 
 export type ConstellationColor =
   | "star"
@@ -29,16 +30,19 @@ interface CategoryDefinition {
 }
 
 export const CONSTELLATION_CATEGORIES: Record<ConstellationCategory, CategoryDefinition> = {
-  dreams: { icon: "🌠", labelVi: "Giấc mơ", labelEn: "Dreams", color: "star", center: { x: 50, y: 14 } },
-  career: { icon: "💼", labelVi: "Sự nghiệp", labelEn: "Career", color: "soft-blue", center: { x: 82, y: 32 } },
-  healing: { icon: "🩹", labelVi: "Chữa lành", labelEn: "Healing", color: "accent-pink", center: { x: 74, y: 72 } },
-  family: { icon: "🏡", labelVi: "Gia đình", labelEn: "Family", color: "secondary", center: { x: 48, y: 88 } },
-  travel: { icon: "🧭", labelVi: "Du lịch", labelEn: "Travel", color: "lavender", center: { x: 20, y: 72 } },
-  friends: { icon: "🤝", labelVi: "Bạn bè", labelEn: "Friends", color: "primary", center: { x: 18, y: 32 } },
-  growth: { icon: "🌱", labelVi: "Trưởng thành", labelEn: "Growth", color: "soft-blue", center: { x: 50, y: 50 } },
+  growth: { icon: "🌱", labelVi: "Trưởng thành", labelEn: "Growth", color: "star", center: { x: 50, y: 50 } },
   love: { icon: "💗", labelVi: "Tình yêu", labelEn: "Love", color: "accent-pink", center: { x: 65, y: 50 } },
+  career: { icon: "💼", labelVi: "Sự nghiệp", labelEn: "Career", color: "soft-blue", center: { x: 82, y: 32 } },
+  family: { icon: "🏡", labelVi: "Gia đình", labelEn: "Family", color: "secondary", center: { x: 48, y: 88 } },
+  health: { icon: "🩹", labelVi: "Sức khỏe", labelEn: "Health", color: "accent-pink", center: { x: 74, y: 72 } },
+  dreams: { icon: "🌠", labelVi: "Giấc mơ", labelEn: "Dreams", color: "star", center: { x: 50, y: 14 } },
+  stress: { icon: "🌧️", labelVi: "Căng thẳng", labelEn: "Stress", color: "primary", center: { x: 18, y: 32 } },
+  joy: { icon: "✨", labelVi: "Niềm vui", labelEn: "Joy", color: "lavender", center: { x: 20, y: 72 } },
 };
 
+// Real life-topic signal (from lib/reflection.ts's keyword detection) maps
+// straight to a category. Not every topic has an obvious category — those
+// fall through to the emotion-based check below.
 const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
   "công việc": "career",
   work: "career",
@@ -46,21 +50,30 @@ const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
   family: "family",
   "tình cảm": "love",
   relationship: "love",
-  "sức khỏe": "healing",
-  health: "healing",
+  "sức khỏe": "health",
+  health: "health",
   "tương lai": "dreams",
   future: "dreams",
-  "bạn bè": "friends",
-  friend: "friends",
-  "du lịch": "travel",
-  travel: "travel",
   "cuộc sống": "growth",
   life: "growth",
 };
 
+// When the topic doesn't resolve to a category, fall back to the memory's
+// own detected emotion — also real signal, never fabricated.
+const STRESS_EMOTIONS = new Set<EmotionKey>(["anxious", "worried", "frustrated", "overwhelmed", "angry"]);
+const JOY_EMOTIONS = new Set<EmotionKey>(["happy", "hopeful", "inspired", "peaceful", "calm"]);
+
 export function getMemoryCategory(memory: Memory): ConstellationCategory {
   const topic = memory.topics[0];
-  return (topic && TOPIC_TO_CATEGORY[topic]) || "growth";
+  const mapped = topic ? TOPIC_TO_CATEGORY[topic] : undefined;
+  if (mapped) return mapped;
+
+  if (memory.emotionKey) {
+    if (STRESS_EMOTIONS.has(memory.emotionKey)) return "stress";
+    if (JOY_EMOTIONS.has(memory.emotionKey)) return "joy";
+  }
+
+  return "growth";
 }
 
 export function getCategoryLabel(category: ConstellationCategory, lang: Lang): string {

@@ -10,8 +10,9 @@ import { getTide, useDailyQuote } from "@/lib/tides";
 import { computeStarPosition } from "@/lib/constellation";
 import { getEmotionLabel, EMOTION_TAXONOMY } from "@/lib/emotions";
 import { useDreamJournal, saveDreamJournal } from "@/lib/dreamJournal";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 import { EmotionBadge } from "@/components/EmotionBadge";
+import { EmotionInsights } from "@/components/EmotionInsights";
 import { BreathingGuide } from "@/components/BreathingGuide";
 
 const TIDE_BG: Record<string, string> = {
@@ -78,7 +79,7 @@ export default function HomePage() {
               </div>
             </>
           )}
-          <Moon mood={isNight ? "sleeping" : "smiling"} size={88} float />
+          <Moon size={88} sway priority />
           <p className="mt-5 font-serif text-3xl text-ink">
             {greeting}
             {profile.name ? `, ${profile.name}` : ""}.
@@ -190,7 +191,7 @@ export default function HomePage() {
 
             {!latest && (
               <div className="haven-surface animate-rise mt-6 flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
-                <Moon mood="curious" size={56} />
+                <Moon size={56} />
                 <p className="font-serif text-lg text-ink">{t.emptyMemoriesTitle}</p>
                 <p className="text-sm text-muted">{t.emptyMemoriesBody}</p>
               </div>
@@ -211,6 +212,12 @@ export default function HomePage() {
                     </>
                   )}
                 </p>
+              </div>
+            )}
+
+            {memories.length > 0 && (
+              <div className="mt-4">
+                <EmotionInsights memories={memories} compact />
               </div>
             )}
 

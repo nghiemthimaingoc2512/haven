@@ -11,7 +11,7 @@ import {
   type ConstellationCategory,
   type ConstellationColor,
 } from "@/lib/constellation";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 
 const CATEGORY_LIST = Object.keys(CONSTELLATION_CATEGORIES) as ConstellationCategory[];
 
@@ -88,11 +88,14 @@ export default function StoryPage() {
   return (
     <div className="haven-night-sky min-h-full px-6 py-10">
       <div className="mx-auto w-full max-w-2xl">
-        <h1 className="font-serif text-3xl text-ink">{t.storyTitle}</h1>
+        <div className="flex items-center gap-3">
+          <Moon size={40} glow={false} />
+          <h1 className="font-serif text-3xl text-ink">{t.storyTitle}</h1>
+        </div>
 
         {memories.length === 0 ? (
           <div className="haven-surface animate-rise mt-8 flex flex-col items-center gap-3 rounded-2xl px-6 py-10 text-center">
-            <Moon mood="curious" size={56} />
+            <Moon size={56} />
             <p className="text-muted">{t.constellationEmpty}</p>
           </div>
         ) : (
@@ -209,7 +212,8 @@ export default function StoryPage() {
                 ✕
               </button>
             </div>
-            <p className="mt-4 font-serif text-lg leading-relaxed text-ink">
+            <Moon size={36} glow={false} className="mt-4" />
+            <p className="mt-3 font-serif text-lg leading-relaxed text-ink">
               {openMemory.reflection}
             </p>
             {openMemory.standout && (

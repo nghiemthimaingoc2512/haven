@@ -2,7 +2,8 @@
 
 import { useSyncExternalStore } from "react";
 import type { Memory } from "@/lib/storage";
-import type { EmotionKey } from "@/lib/emotions";
+import type { Lang } from "@/lib/i18n";
+import { EMOTION_VALENCE, type EmotionKey } from "@/lib/emotions";
 
 export type DayPeriod = "morning" | "afternoon" | "evening" | "night";
 
@@ -74,4 +75,77 @@ export function getWeeklySummary(memories: Memory[]): WeeklySummary {
   }
 
   return { count: thisWeek.length, dominantEmotion };
+}
+
+export interface MoodCalendarDay {
+  day: number;
+  emotionKey: EmotionKey | null;
+}
+
+/** One cell per day of the given month — the day's first-logged emotion, or null if nothing was saved that day. */
+export function getMoodCalendar(memories: Memory[], monthDate: Date = new Date()): MoodCalendarDay[] {
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const byDay = new Map<number, EmotionKey>();
+  for (const m of memories) {
+    if (!m.emotionKey) continue;
+    const d = new Date(m.createdAt);
+    if (d.getFullYear() !== year || d.getMonth() !== month) continue;
+    // memories are newest-first; keep the first one seen per day
+    if (!byDay.has(d.getDate())) byDay.set(d.getDate(), m.emotionKey);
+  }
+
+  return Array.from({ length: daysInMonth }, (_, i) => ({
+    day: i + 1,
+    emotionKey: byDay.get(i + 1) ?? null,
+  }));
+}
+
+export interface MoodTrendWeek {
+  avgValence: number | null;
+  count: number;
+}
+
+/** Average mood valence per week, oldest to newest — the data behind a trend graph. */
+export function getMoodTrend(memories: Memory[], weeks = 8): MoodTrendWeek[] {
+  const now = Date.now();
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const points: MoodTrendWeek[] = [];
+
+  for (let w = weeks - 1; w >= 0; w--) {
+    const end = now - w * weekMs;
+    const start = end - weekMs;
+    const valences = memories
+      .filter((m) => {
+        const t = new Date(m.createdAt).getTime();
+        return t >= start && t < end && m.emotionKey;
+      })
+      .map((m) => EMOTION_VALENCE[m.emotionKey as EmotionKey]);
+    const avgValence = valences.length ? valences.reduce((a, b) => a + b, 0) / valences.length : null;
+    points.push({ avgValence, count: valences.length });
+  }
+
+  return points;
+}
+
+/** Average mood valence over the last N days, or null if nothing was logged. */
+export function getAverageMood(memories: Memory[], days = 30): number | null {
+  const since = Date.now() - days * 24 * 60 * 60 * 1000;
+  const valences = memories
+    .filter((m) => new Date(m.createdAt).getTime() >= since && m.emotionKey)
+    .map((m) => EMOTION_VALENCE[m.emotionKey as EmotionKey]);
+  if (valences.length === 0) return null;
+  return valences.reduce((a, b) => a + b, 0) / valences.length;
+}
+
+/** A friendly icon + label for a valence score — never the raw number, which would read as clinical. */
+export function describeValence(avg: number | null, lang: Lang): { icon: string; label: string } {
+  if (avg === null) return { icon: "🤍", label: lang === "vi" ? "Chưa có dữ liệu" : "Not enough data yet" };
+  if (avg >= 1.2) return { icon: "✨", label: lang === "vi" ? "Rất tích cực" : "Very positive" };
+  if (avg >= 0.4) return { icon: "🙂", label: lang === "vi" ? "Tích cực" : "Positive" };
+  if (avg > -0.4) return { icon: "🤍", label: lang === "vi" ? "Trung tính" : "Neutral" };
+  if (avg > -1.2) return { icon: "😟", label: lang === "vi" ? "Hơi nặng nề" : "A bit heavy" };
+  return { icon: "😔", label: lang === "vi" ? "Nặng nề" : "Heavy" };
 }

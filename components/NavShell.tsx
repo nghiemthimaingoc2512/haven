@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
-import { useDayPeriod } from "@/lib/insights";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 
 interface NavItem {
   href: string;
@@ -27,15 +26,13 @@ function isActive(pathname: string, href: string): boolean {
 export function NavShell({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
   const pathname = usePathname();
-  const period = useDayPeriod();
-  const isNight = period === "night";
 
   return (
     <div className="flex min-h-full flex-col">
       {/* Desktop: top nav */}
       <header className="haven-surface sticky top-0 z-20 mx-4 mt-4 hidden items-center justify-between rounded-full px-6 py-3 md:flex">
         <Link href="/home" className="flex items-center gap-2 font-serif text-lg text-ink">
-          <Moon mood={isNight ? "sleeping" : "smiling"} size={26} glow={false} />
+          <Moon size={26} glow={false} animate={false} />
           {t.brand}
         </Link>
         <nav className="flex items-center gap-1" aria-label={t.navHome}>

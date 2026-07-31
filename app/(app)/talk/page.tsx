@@ -10,8 +10,7 @@ import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
 import { generateReflection } from "@/lib/reflection";
 import { saveMemory, createMemoryId } from "@/lib/storage";
 import { Waveform } from "@/components/Waveform";
-import { Moon } from "@/components/Moon";
-import { useDayPeriod } from "@/lib/insights";
+import { Moon } from "@/components/mascot/Moon";
 
 type Mode = "voice" | "text";
 type Phase = "composing" | "processing";
@@ -129,7 +128,6 @@ function TalkPageInner() {
   const { lang, t } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isNight = useDayPeriod() === "night";
 
   const [mode, setMode] = useState<Mode>(
     searchParams.get("mode") === "text" ? "text" : "voice",
@@ -268,7 +266,7 @@ function TalkPageInner() {
   if (phase === "processing") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-        <Moon mood="curious" size={80} float sparkle />
+        <Moon size={80} />
         <p key={processingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
           {processingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
@@ -309,12 +307,7 @@ function TalkPageInner() {
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
         {mode === "voice" && (
           <div className="flex flex-col items-center gap-3">
-            <Moon
-              mood={isNight ? "sleeping" : "smiling"}
-              size={status === "listening" ? 120 : 96}
-              float
-              className={status === "listening" ? "animate-glow-pulse" : ""}
-            />
+            <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} />
             {!hasContent && status === "idle" && (
               <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
             )}

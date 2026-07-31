@@ -7,7 +7,8 @@ import { useProfile } from "@/lib/profile";
 import { useTheme, setTheme, type ThemePreference } from "@/lib/theme";
 import { useNotifications, setNotifications } from "@/lib/notifications";
 import { getAllMemories, useMemories } from "@/lib/storage";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
+import { EmotionInsights } from "@/components/EmotionInsights";
 
 const THEME_OPTIONS: ThemePreference[] = ["light", "dark", "system"];
 const LANG_OPTIONS: { value: Lang; flag: string; label: string }[] = [
@@ -72,7 +73,7 @@ export default function MePage() {
   return (
     <div className="mx-auto w-full max-w-xl px-6 py-10">
       <div className="flex items-center gap-3">
-        <Moon mood="smiling" size={40} glow={false} />
+        <Moon size={40} glow={false} />
         <h1 className="font-serif text-3xl text-ink">{t.navMe}</h1>
       </div>
 
@@ -142,6 +143,10 @@ export default function MePage() {
         <p className="mt-2 text-ink/90">{t.meAiMemoryBody}</p>
         <p className="mt-2 text-sm text-secondary">{memories.length}</p>
       </SettingCard>
+
+      <div className="mt-4">
+        <EmotionInsights memories={memories} />
+      </div>
 
       <SettingCard label={t.mePrivacy}>
         <p className="mt-2 text-ink/90">{t.mePrivacyBody}</p>

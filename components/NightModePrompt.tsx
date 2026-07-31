@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useDayPeriod } from "@/lib/insights";
 import { useTheme, setTheme } from "@/lib/theme";
 import { useLanguage } from "@/lib/i18n";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 
 const PROMPT_KEY = "haven:nightModePromptDate";
 
@@ -61,7 +61,7 @@ export function NightModePrompt() {
       className="animate-rise fixed inset-0 z-50 flex items-center justify-center bg-ink/30 px-6 backdrop-blur-sm"
     >
       <div className="haven-surface max-w-sm rounded-3xl px-8 py-8 text-center">
-        <Moon mood="sleeping" size={64} float />
+        <Moon state="sleeping" size={64} />
         <p className="mt-4 font-serif text-xl text-ink">
           {t.nightPromptTitle}
         </p>

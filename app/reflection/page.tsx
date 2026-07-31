@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 import { useMemories } from "@/lib/storage";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 import { EmotionBadge } from "@/components/EmotionBadge";
 
 export default function ReflectionPage() {
@@ -25,7 +25,7 @@ export default function ReflectionPage() {
   if (!latest) {
     return (
       <main className="flex min-h-full flex-col items-center justify-center px-6 py-24">
-        <Moon mood="curious" size={64} float />
+        <Moon size={64} />
         <p className="mt-4 max-w-sm text-center font-serif text-xl text-muted">
           {t.emptyMemoriesBody}
         </p>
@@ -43,7 +43,7 @@ export default function ReflectionPage() {
     <main className="flex min-h-full flex-col px-6 py-10">
       <header className="flex w-full items-center justify-between">
         <span className="flex items-center gap-1.5 font-serif text-sm text-muted">
-          <Moon mood="smiling" size={18} glow={false} />
+          <Moon size={18} glow={false} animate={false} />
           {t.brand}
         </span>
         <Link href="/story" className="text-sm text-muted hover:text-ink">
@@ -66,9 +66,12 @@ export default function ReflectionPage() {
           )}
 
           <div className="animate-rise haven-surface rounded-2xl px-8 py-10">
-            <p className="text-xs uppercase tracking-wide text-muted">
-              {t.reflectionHeading}
-            </p>
+            <div className="flex items-center gap-3">
+              <Moon size={40} glow={false} />
+              <p className="text-xs uppercase tracking-wide text-muted">
+                {t.reflectionHeading}
+              </p>
+            </div>
 
             <p className="mt-4 font-serif text-xl leading-relaxed text-ink">
               {latest.reflection}

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage, type Lang } from "@/lib/i18n";
 import { useProfile, completeOnboarding } from "@/lib/profile";
 import { useTheme, setTheme, type ThemePreference } from "@/lib/theme";
-import { Moon } from "@/components/Moon";
+import { Moon } from "@/components/mascot/Moon";
 
 type Step = "welcome" | "name" | "language" | "appearance" | "home";
 
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
       <div className="animate-rise relative w-full max-w-xl text-center">
         {step === "welcome" && (
           <div className="flex flex-col items-center">
-            <Moon mood="smiling" size={104} float />
+            <Moon size={104} sway priority />
             <h1 className="mt-6 font-serif text-5xl text-ink">{t.brand}</h1>
             <p className="mt-2 font-serif text-xl italic text-secondary">
               {t.tagline}
@@ -83,7 +83,7 @@ export default function OnboardingPage() {
 
         {step === "name" && (
           <div className="flex flex-col items-center">
-            <Moon mood="curious" size={72} float />
+            <Moon size={72} />
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {t.onboardingNameTitle}
             </h1>
@@ -184,7 +184,7 @@ export default function OnboardingPage() {
 
         {step === "home" && (
           <div className="flex flex-col items-center">
-            <Moon mood="smiling" size={104} float />
+            <Moon size={104} sway />
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {t.welcomeHomeGreeting}
             </h1>

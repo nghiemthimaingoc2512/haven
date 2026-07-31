@@ -54,6 +54,26 @@ export function getEmotionLabel(key: EmotionKey, lang: Lang): string {
   return lang === "vi" ? EMOTION_TAXONOMY[key].labelVi : EMOTION_TAXONOMY[key].labelEn;
 }
 
+/**
+ * A rough -2..+2 pleasantness score per emotion, used only to draw trend
+ * lines/averages — never shown to the user as a raw number, and never a
+ * substitute for the actual detected emotion + confidence.
+ */
+export const EMOTION_VALENCE: Record<EmotionKey, number> = {
+  overwhelmed: -2,
+  angry: -2,
+  anxious: -1.5,
+  sad: -1.5,
+  frustrated: -1,
+  worried: -1,
+  neutral: 0,
+  calm: 1,
+  peaceful: 1,
+  hopeful: 1.5,
+  happy: 2,
+  inspired: 2,
+};
+
 export type Intensity = "low" | "medium" | "high";
 
 export function getIntensityLabel(intensity: Intensity, lang: Lang): string {
