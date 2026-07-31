@@ -108,10 +108,14 @@ export interface Copy {
   auroraContextPlaceholder: string;
   auroraGoalLabel: string;
   auroraGoalPlaceholder: string;
+  auroraSituationLabel: string;
+  auroraHypothesesLabel: string;
+  auroraFrameworkLabel: string;
   auroraOptionsLabel: string;
-  auroraReasoningLabel: string;
-  auroraConsiderLabel: string;
+  auroraTradeoffsLabel: string;
   auroraRecommendationLabel: string;
+  auroraActionPlanLabel: string;
+  auroraReflectionLabel: string;
   auroraNewQuestion: string;
   auroraTryPrompt: string;
   constellationEmpty: string;
@@ -149,6 +153,8 @@ export interface Copy {
   emotionWeeklyTrend: string;
   emotionMoodCalendar: string;
   emotionNoDataYet: string;
+  homeWhisperCardBody: string;
+  homeAuroraCardBody: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -156,11 +162,11 @@ const dictionary: Record<Lang, Copy> = {
     brand: "Haven",
     tagline: "Nơi để đi về.",
     welcomeBody:
-      "Không phải bác sĩ tâm lý. Không phải một người bạn giả vờ rảnh hơn thực tế. Chỉ là một nơi lắng nghe, ghi nhớ, và không bao giờ thấy phiền vì bạn.",
+      "Không phải bác sĩ tâm lý. Haven là hai người bạn: Thì thầm lắng nghe chuyện mỗi ngày của bạn, Cực quang giúp bạn suy nghĩ rõ ràng hơn khi cần quyết định. Cả hai luôn ở đây, không bao giờ thấy phiền vì bạn.",
     welcomeCrisis:
       "Nếu bạn đang trong khủng hoảng, đây không phải là nơi phù hợp — hãy liên hệ đường dây nóng hỗ trợ tâm lý hoặc số cấp cứu tại nơi bạn sống. Còn nếu không, mình ở đây, và sẽ không đi đâu cả.",
     startTalking: "Bắt đầu nói",
-    talkPlaceholder: "Nói ra điều bạn chưa từng nói — hoặc viết ra.",
+    talkPlaceholder: "Kể cho mình nghe hôm nay của bạn thế nào — chuyện gì cũng được.",
     finishReflection: "Xong",
     cancel: "Hủy",
     send: "Gửi",
@@ -177,7 +183,7 @@ const dictionary: Record<Lang, Copy> = {
     statusNetworkError:
       "Có sự cố kết nối — chạm để thử lại, hoặc tiếp tục viết.",
     statusUnsupported: "Trình duyệt này chưa hỗ trợ giọng nói. Hãy gõ thay.",
-    processingListening: "Haven đang lắng nghe…",
+    processingListening: "Thì thầm đang lắng nghe…",
     processingReflecting: "Đang suy ngẫm…",
     reflectionHeading: "Suy ngẫm hôm nay",
     savedLabel: "Đã lưu ✓",
@@ -224,7 +230,7 @@ const dictionary: Record<Lang, Copy> = {
     onboardingAppearanceTitle: "Chọn giao diện bạn thích",
     onboardingAuto: "Tự động",
     welcomeHomeGreeting: "Chào mừng bạn về nhà.",
-    welcomeHomeBody: "Từ giờ, Haven sẽ ở đây — lắng nghe, ghi nhớ, và đi cùng bạn.",
+    welcomeHomeBody: "Thì thầm sẽ lắng nghe bạn mỗi ngày. Cực quang sẽ giúp bạn suy nghĩ rõ ràng hơn khi cần quyết định.",
     heroQuestion: "Trái tim bạn tối nay thế nào?",
     todaysTide: "Nhịp cảm xúc hôm nay",
     glowOfDay: "Ánh sáng nhỏ hôm nay",
@@ -247,10 +253,14 @@ const dictionary: Record<Lang, Copy> = {
     auroraContextPlaceholder: "Có gì phía sau chuyện này mà đáng để biết không?",
     auroraGoalLabel: "Mục tiêu (không bắt buộc)",
     auroraGoalPlaceholder: "Một kết quả tốt sẽ trông như thế nào?",
+    auroraSituationLabel: "Tình huống",
+    auroraHypothesesLabel: "Vài giả thuyết đáng cân nhắc",
+    auroraFrameworkLabel: "Cách tiếp cận",
     auroraOptionsLabel: "Các lựa chọn",
-    auroraReasoningLabel: "Góc nhìn của Aurora",
-    auroraConsiderLabel: "Vài điều đáng cân nhắc",
+    auroraTradeoffsLabel: "Đánh đổi cần cân nhắc",
     auroraRecommendationLabel: "Gợi ý",
+    auroraActionPlanLabel: "Kế hoạch hành động",
+    auroraReflectionLabel: "Để suy ngẫm thêm",
     auroraNewQuestion: "Hỏi điều khác",
     auroraTryPrompt: "Hoặc thử một trong số này:",
     constellationEmpty: "Bầu trời vẫn còn trống. Mỗi cuộc trò chuyện sẽ trở thành một ngôi sao.",
@@ -268,7 +278,7 @@ const dictionary: Record<Lang, Copy> = {
     constellationPreviewLabel: "Xem trước chòm sao",
     meNotifications: "Thông báo",
     meAiMemory: "Trí nhớ AI",
-    meAiMemoryBody: "Haven ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Chòm sao.",
+    meAiMemoryBody: "Thì thầm ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Chòm sao.",
     mePrivacy: "Quyền riêng tư",
     mePrivacyBody: "Mọi dữ liệu hiện được lưu trực tiếp trên thiết bị của bạn — không có máy chủ, không chia sẻ với bên thứ ba.",
     meExport: "Xuất dữ liệu",
@@ -280,7 +290,7 @@ const dictionary: Record<Lang, Copy> = {
     meVersion: "Phiên bản",
     meSupport: "Hỗ trợ",
     meSupportBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
-    carryAloneLine: "Bạn không cần phải một mình gánh mọi thứ.",
+    carryAloneLine: "Chuyện gì cũng được — vui, buồn, hay chỉ một khoảnh khắc nhỏ trong ngày.",
     breatheTogetherLine: "Hãy cùng thở nhé.",
     emotionInsightsTitle: "Hành trình cảm xúc",
     emotionAverageMood: "Tâm trạng trung bình (30 ngày)",
@@ -288,16 +298,18 @@ const dictionary: Record<Lang, Copy> = {
     emotionWeeklyTrend: "8 tuần gần đây",
     emotionMoodCalendar: "Lịch tâm trạng tháng này",
     emotionNoDataYet: "Chưa có đủ dữ liệu để hiển thị.",
+    homeWhisperCardBody: "Người bạn luôn lắng nghe bạn mỗi ngày.",
+    homeAuroraCardBody: "Người cố vấn giúp bạn suy nghĩ rõ ràng hơn.",
   },
   en: {
     brand: "Haven",
     tagline: "Somewhere to go.",
     welcomeBody:
-      "Not a therapist. Not a friend pretending to be more available than they are. Just somewhere that listens, remembers, and won't get tired of you.",
+      "Not a therapist. Haven is two companions: Whisper listens to your everyday, Aurora helps you think clearly when you need to decide. Both are always here, and neither will get tired of you.",
     welcomeCrisis:
       "If you're in crisis, this isn't the right place — please contact a crisis line (988 in the US) or emergency services instead. Otherwise, I'm here, and I'm not going anywhere.",
     startTalking: "Start talking",
-    talkPlaceholder: "Say the thing you haven't said yet — or write it.",
+    talkPlaceholder: "Tell me about your day — anything at all.",
     finishReflection: "Done",
     cancel: "Cancel",
     send: "Send",
@@ -315,7 +327,7 @@ const dictionary: Record<Lang, Copy> = {
       "Connection trouble — tap to try again, or keep writing.",
     statusUnsupported:
       "Voice isn't available in this browser. Type instead.",
-    processingListening: "Haven is listening…",
+    processingListening: "Whisper is listening…",
     processingReflecting: "Reflecting…",
     reflectionHeading: "Today's reflection",
     savedLabel: "Saved ✓",
@@ -362,7 +374,7 @@ const dictionary: Record<Lang, Copy> = {
     onboardingAppearanceTitle: "Choose your appearance",
     onboardingAuto: "Auto",
     welcomeHomeGreeting: "Welcome home.",
-    welcomeHomeBody: "From now on, Haven will be here — listening, remembering, and growing alongside you.",
+    welcomeHomeBody: "Whisper will listen to your everyday. Aurora will help you think clearly when you need to decide.",
     heroQuestion: "How is your heart tonight?",
     todaysTide: "Today's Tide",
     glowOfDay: "Glow of the Day",
@@ -385,10 +397,14 @@ const dictionary: Record<Lang, Copy> = {
     auroraContextPlaceholder: "Any background that matters here?",
     auroraGoalLabel: "Goal (optional)",
     auroraGoalPlaceholder: "What would a good outcome look like?",
+    auroraSituationLabel: "Situation",
+    auroraHypothesesLabel: "A few hypotheses worth testing",
+    auroraFrameworkLabel: "Approach",
     auroraOptionsLabel: "Options",
-    auroraReasoningLabel: "Aurora's take",
-    auroraConsiderLabel: "A few things worth considering",
+    auroraTradeoffsLabel: "Trade-offs to weigh",
     auroraRecommendationLabel: "Recommendation",
+    auroraActionPlanLabel: "Action plan",
+    auroraReflectionLabel: "Worth reflecting on",
     auroraNewQuestion: "Ask something else",
     auroraTryPrompt: "Or try one of these:",
     constellationEmpty: "The sky is still empty. Every conversation becomes a star.",
@@ -406,7 +422,7 @@ const dictionary: Record<Lang, Copy> = {
     constellationPreviewLabel: "Constellation preview",
     meNotifications: "Notifications",
     meAiMemory: "AI Memory",
-    meAiMemoryBody: "Haven remembers what you share to understand you better over time. You can view or delete anything anytime in Constellation.",
+    meAiMemoryBody: "Whisper remembers what you share to understand you better over time. You can view or delete anything anytime in Constellation.",
     mePrivacy: "Privacy",
     mePrivacyBody: "Everything is currently stored directly on your device — no server, nothing shared with third parties.",
     meExport: "Export data",
@@ -418,7 +434,7 @@ const dictionary: Record<Lang, Copy> = {
     meVersion: "Version",
     meSupport: "Support",
     meSupportBody: "This is a prototype — there's no official support channel yet.",
-    carryAloneLine: "You don't have to carry everything alone.",
+    carryAloneLine: "Anything goes — happy, sad, or just a small moment from your day.",
     breatheTogetherLine: "Let's breathe together.",
     emotionInsightsTitle: "Emotional Journey",
     emotionAverageMood: "Average mood (30 days)",
@@ -426,6 +442,8 @@ const dictionary: Record<Lang, Copy> = {
     emotionWeeklyTrend: "Last 8 weeks",
     emotionMoodCalendar: "This month's mood calendar",
     emotionNoDataYet: "Not enough data to show yet.",
+    homeWhisperCardBody: "The friend who's always listening.",
+    homeAuroraCardBody: "The consultant who helps you think clearly.",
   },
 };
 

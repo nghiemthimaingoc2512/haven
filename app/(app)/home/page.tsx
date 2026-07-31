@@ -89,6 +89,24 @@ export default function HomePage() {
           </p>
         </div>
 
+        {/* Two companions, always both visible — Haven is never a single AI */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/talk"
+            className="haven-surface animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
+          >
+            <p className="font-serif text-lg text-ink">{t.navTalk}</p>
+            <p className="mt-1 text-sm text-muted">{t.homeWhisperCardBody}</p>
+          </Link>
+          <Link
+            href="/discover"
+            className="haven-aurora animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
+          >
+            <p className="font-serif text-lg text-ink">{t.navDiscover}</p>
+            <p className="mt-1 text-sm text-ink/70">{t.homeAuroraCardBody}</p>
+          </Link>
+        </div>
+
         {isNight ? (
           <>
             {/* Night Ritual */}

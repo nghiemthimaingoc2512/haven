@@ -130,7 +130,7 @@ export default function AuroraPage() {
           </div>
         ) : (
           <div className="animate-rise mt-8 space-y-4">
-            {/* Problem */}
+            {/* Problem, as given */}
             <div className="haven-surface rounded-2xl px-6 py-5">
               <p className="text-xs uppercase tracking-wide text-muted">{t.auroraProblemLabel}</p>
               <p className="mt-1 text-ink">{submitted?.problem}</p>
@@ -154,6 +154,40 @@ export default function AuroraPage() {
               </div>
             )}
 
+            {/* Situation — Aurora reframes before answering, mascot as the consultant speaking */}
+            <div className="haven-surface rounded-2xl bg-star/15 px-6 py-6">
+              <div className="flex items-start gap-3">
+                <Moon size={36} glow={false} />
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted">{t.auroraSituationLabel}</p>
+                  <p className="mt-2 font-serif text-xl leading-relaxed text-ink">{response.situation}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Hypotheses — skipped once concrete options exist, since then the ambiguity is which option, not what the issue is */}
+            {response.hypotheses.length > 0 && (
+              <div className="haven-surface rounded-2xl px-6 py-6">
+                <p className="text-xs uppercase tracking-wide text-muted">{t.auroraHypothesesLabel}</p>
+                <ul className="mt-3 space-y-2">
+                  {response.hypotheses.map((h) => (
+                    <li key={h} className="flex gap-2 text-ink/90">
+                      <span aria-hidden="true" className="text-accent-pink">
+                        ✦
+                      </span>
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 font-serif italic text-secondary">{response.rootCauseQuestion}</p>
+              </div>
+            )}
+
+            <div className="haven-surface rounded-2xl px-6 py-5">
+              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraFrameworkLabel}</p>
+              <p className="mt-1 text-ink/90">{response.framework}</p>
+            </div>
+
             {/* Options, if detected */}
             {response.optionsDetected && (
               <div className="haven-surface rounded-2xl px-6 py-5">
@@ -165,24 +199,14 @@ export default function AuroraPage() {
                     </span>
                   ))}
                 </div>
+                <p className="mt-3 text-ink/90">{response.rootCauseQuestion}</p>
               </div>
             )}
 
-            {/* AI reasoning, with the mascot beside it as the thoughtful companion speaking */}
-            <div className="haven-surface rounded-2xl bg-star/15 px-6 py-6">
-              <div className="flex items-start gap-3">
-                <Moon size={36} glow={false} />
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-muted">{t.auroraReasoningLabel}</p>
-                  <p className="mt-2 font-serif text-xl leading-relaxed text-ink">{response.reasoning}</p>
-                </div>
-              </div>
-            </div>
-
             <div className="haven-surface rounded-2xl px-6 py-6">
-              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraConsiderLabel}</p>
+              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraTradeoffsLabel}</p>
               <ul className="mt-3 space-y-2">
-                {response.considerations.map((c) => (
+                {response.tradeoffs.map((c) => (
                   <li key={c} className="flex gap-2 text-ink/90">
                     <span aria-hidden="true" className="text-accent-pink">
                       ✦
@@ -198,13 +222,31 @@ export default function AuroraPage() {
               <p className="mt-2 text-ink">{response.recommendation}</p>
             </div>
 
-            <button
-              type="button"
-              onClick={reset}
-              className="text-sm text-primary hover:opacity-70"
-            >
-              {t.auroraNewQuestion}
-            </button>
+            <div className="haven-surface rounded-2xl px-6 py-6">
+              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraActionPlanLabel}</p>
+              <ul className="mt-3 space-y-2">
+                {response.actionPlan.map((step, i) => (
+                  <li key={step} className="flex gap-3 text-ink/90">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs text-primary">
+                      {i + 1}
+                    </span>
+                    {step}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <p className="text-center font-serif italic text-secondary">{response.reflectionPrompt}</p>
+
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={reset}
+                className="text-sm text-primary hover:opacity-70"
+              >
+                {t.auroraNewQuestion}
+              </button>
+            </div>
           </div>
         )}
       </div>

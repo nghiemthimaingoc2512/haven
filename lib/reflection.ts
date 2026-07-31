@@ -47,7 +47,20 @@ const EMOTION_KEY_BY_BUCKET: Record<string, EmotionKey> = {
   frustrated: "frustrated",
   "nhẹ nhõm": "calm",
   relieved: "calm",
+  "vui vẻ": "happy",
+  happy: "happy",
+  "tự hào": "happy",
+  proud: "happy",
+  "buồn cười": "happy",
+  amused: "happy",
 };
+
+// Whisper isn't only for heavy disclosure — "I just ate great pho" and
+// "I'm exhausted" both need a real emotional read, but they call for
+// completely different energy in response. Buckets are tagged by register
+// so the composed reply matches: heavy gets held gently, light gets met
+// with actual excitement, not a solemn "thank you for trusting me."
+const HEAVY_BUCKETS = new Set(["kiệt sức", "exhausted", "buồn bã", "sad", "lo lắng", "anxious", "cô đơn", "lonely", "khó chịu", "frustrated"]);
 
 const EMOTION_KEYWORDS_VI: Array<[string[], string]> = [
   [["mệt", "mệt mỏi", "kiệt sức"], "kiệt sức"],
@@ -55,7 +68,10 @@ const EMOTION_KEYWORDS_VI: Array<[string[], string]> = [
   [["lo", "lo lắng", "lo âu"], "lo lắng"],
   [["cô đơn", "một mình"], "cô đơn"],
   [["tức", "giận", "khó chịu"], "khó chịu"],
-  [["vui", "hạnh phúc", "nhẹ nhõm"], "nhẹ nhõm"],
+  [["nhẹ nhõm"], "nhẹ nhõm"],
+  [["vui", "thích quá", "tuyệt vời", "hạnh phúc", "yêu quá", "đáng yêu", "dễ thương", "ngon", "xịn quá"], "vui vẻ"],
+  [["tự hào", "đậu rồi", "đậu phỏng vấn", "thành công", "làm được rồi", "vượt qua"], "tự hào"],
+  [["buồn cười", "hài hước", "meme", "cười muốn xỉu"], "buồn cười"],
 ];
 
 const EMOTION_KEYWORDS_EN: Array<[string[], string]> = [
@@ -64,7 +80,10 @@ const EMOTION_KEYWORDS_EN: Array<[string[], string]> = [
   [["anxious", "worried", "anxiety"], "anxious"],
   [["lonely", "alone"], "lonely"],
   [["angry", "frustrated", "annoyed"], "frustrated"],
-  [["happy", "relieved", "good"], "relieved"],
+  [["relieved"], "relieved"],
+  [["happy", "love this", "adorable", "cute", "delicious", "amazing", "so good"], "happy"],
+  [["proud", "passed", "i did it", "nailed it", "finally got"], "proud"],
+  [["funny", "hilarious", "meme", "lol", "lmao"], "amused"],
 ];
 
 const TOPIC_KEYWORDS_VI: Array<[string[], string]> = [
@@ -134,30 +153,50 @@ function matchKeywordsWithStrength(
   return matches;
 }
 
-const REFLECTION_LINES_VI: Record<string, string> = {
+// Heavy shares get held gently — the original "I've listened, thank you for
+// trusting me" register. This is the wrong register for a food photo.
+const HEAVY_LINES_VI: Record<string, string> = {
   "kiệt sức": "Có vẻ như hôm nay là một ngày nặng nề, và bạn đã một mình gánh khá nhiều thứ.",
   "buồn bã": "Điều bạn vừa chia sẻ nghe thật không dễ dàng.",
   "lo lắng": "Có vẻ như có điều gì đó cứ quanh quẩn trong đầu bạn mãi không thôi.",
   "cô đơn": "Nghe như bạn đã giữ điều này một mình khá lâu rồi.",
   "khó chịu": "Có vẻ như điều đó thực sự làm bạn khó chịu.",
-  "nhẹ nhõm": "Nghe có vẻ như hôm nay nhẹ nhàng hơn một chút với bạn.",
-  default: "Cảm ơn bạn đã dành thời gian nói ra điều này.",
 };
 
-const REFLECTION_LINES_EN: Record<string, string> = {
+const HEAVY_LINES_EN: Record<string, string> = {
   exhausted: "Today sounds like it's been heavy, and you've been carrying a lot of it alone.",
   sad: "What you just shared doesn't sound easy.",
   anxious: "It sounds like something has been circling in your mind.",
   lonely: "It sounds like you've been holding this by yourself for a while.",
   frustrated: "That sounds like it really got to you.",
-  relieved: "Today sounds like it was a little lighter.",
-  default: "Thank you for taking the time to say this.",
 };
 
 const LISTENED_PREFIX_VI = "Mình đã lắng nghe hết rồi.";
 const LISTENED_PREFIX_EN = "I've been listening. I heard everything.";
 const CLOSING_VI = "Cảm ơn bạn đã tin tưởng chia sẻ điều này.";
 const CLOSING_EN = "Thank you for trusting me with this.";
+
+// Light shares get met with actual excitement — a friend reacting, not a
+// therapist closing a session. No "thank you for trusting me" here.
+const LIGHT_OPENERS_VI: Record<string, string> = {
+  "nhẹ nhõm": "Nhẹ cả người luôn ha.",
+  "vui vẻ": "Ơ hay vậy, nghe vui ghê!",
+  "tự hào": "Ơ hay quá, tự hào về bạn ghê!",
+  "buồn cười": "Hahaha, thiệt luôn hả!",
+};
+
+const LIGHT_OPENERS_EN: Record<string, string> = {
+  relieved: "Aw, that's such a relief.",
+  happy: "Ooh, I love that!",
+  proud: "Wait, that's huge — congrats!",
+  amused: "Haha, no way!",
+};
+
+const LIGHT_CLOSING_VI = "Kể thêm cho mình nghe đi.";
+const LIGHT_CLOSING_EN = "Tell me more!";
+
+const NEUTRAL_LINE_VI = "Mm, mình đang nghe đây. Kể thêm cho mình nghe nhé.";
+const NEUTRAL_LINE_EN = "Mm, I'm here for it. Tell me more.";
 
 export function generateReflection(transcript: string, lang: Lang): GeneratedReflection {
   const emotionMatches = matchKeywordsWithStrength(
@@ -168,6 +207,9 @@ export function generateReflection(transcript: string, lang: Lang): GeneratedRef
   const topMatch = emotionMatches[0] ?? null;
   const emotion = topMatch?.label ?? (lang === "vi" ? "đang suy ngẫm" : "reflective");
   const emotionKey: EmotionKey = topMatch ? (EMOTION_KEY_BY_BUCKET[topMatch.label] ?? "neutral") : "neutral";
+  const register: "heavy" | "light" | "neutral" = topMatch
+    ? (HEAVY_BUCKETS.has(topMatch.label) ? "heavy" : "light")
+    : "neutral";
 
   // confidence/intensity are derived from real signal strength: how many of a
   // bucket's own keywords matched, never a fabricated number
@@ -191,12 +233,21 @@ export function generateReflection(transcript: string, lang: Lang): GeneratedRef
       : `You mentioned "${standoutWord}" a few times. Maybe that's worth noticing.`
     : null;
 
-  const lines = lang === "vi" ? REFLECTION_LINES_VI : REFLECTION_LINES_EN;
-  const line = lines[emotion] ?? lines.default;
-  const prefix = lang === "vi" ? LISTENED_PREFIX_VI : LISTENED_PREFIX_EN;
-  const closing = lang === "vi" ? CLOSING_VI : CLOSING_EN;
-
-  const reflection = [prefix, line, closing].join(" ");
+  let reflection: string;
+  if (register === "heavy" && topMatch) {
+    const lines = lang === "vi" ? HEAVY_LINES_VI : HEAVY_LINES_EN;
+    const line = lines[topMatch.label];
+    const prefix = lang === "vi" ? LISTENED_PREFIX_VI : LISTENED_PREFIX_EN;
+    const closing = lang === "vi" ? CLOSING_VI : CLOSING_EN;
+    reflection = [prefix, line, closing].join(" ");
+  } else if (register === "light" && topMatch) {
+    const openers = lang === "vi" ? LIGHT_OPENERS_VI : LIGHT_OPENERS_EN;
+    const opener = openers[topMatch.label];
+    const closing = lang === "vi" ? LIGHT_CLOSING_VI : LIGHT_CLOSING_EN;
+    reflection = `${opener} ${closing}`;
+  } else {
+    reflection = lang === "vi" ? NEUTRAL_LINE_VI : NEUTRAL_LINE_EN;
+  }
 
   return { reflection, standout, emotion, emotionKey, intensity, confidence, topics, people };
 }
