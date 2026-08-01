@@ -31,7 +31,7 @@ interface EmotionDefinition {
 }
 
 /**
- * Fixed emotional taxonomy. This is a gentle reflection, never a diagnosis —
+ * Fixed emotional taxonomy. This is a gentle reflection, never a diagnosis -
  * see the confidence score attached to each detection, which is derived from
  * how many real keyword matches supported it, not a fabricated number.
  */
@@ -56,7 +56,7 @@ export function getEmotionLabel(key: EmotionKey, lang: Lang): string {
 
 /**
  * A rough -2..+2 pleasantness score per emotion, used only to draw trend
- * lines/averages — never shown to the user as a raw number, and never a
+ * lines/averages - never shown to the user as a raw number, and never a
  * substitute for the actual detected emotion + confidence.
  */
 export const EMOTION_VALENCE: Record<EmotionKey, number> = {

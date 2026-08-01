@@ -66,7 +66,7 @@ export function NavShell({ children }: { children: React.ReactNode }) {
 
       <main className="flex flex-1 flex-col pb-24 md:pb-0">{children}</main>
 
-      {/* Mobile: bottom tab bar for the four main destinations only — utilities + avatar already live in the top bar */}
+      {/* Mobile: bottom tab bar for the four main destinations only - utilities + avatar already live in the top bar */}
       <nav
         aria-label={t.navAriaLabel}
         className="haven-surface fixed inset-x-3 bottom-3 z-20 flex items-center justify-between rounded-full px-2 py-2 md:hidden"

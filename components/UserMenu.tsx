@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "@/lib/i18n";
 import { useProfile, signOut } from "@/lib/profile";
 
-/** Circular initial-letter avatar with a Profile / Settings / Sign out dropdown — replaces the old "Me" nav tab. */
+/** Circular initial-letter avatar with a Profile / Settings / Sign out dropdown - replaces the old "Me" nav tab. */
 export function UserMenu() {
   const { t } = useLanguage();
   const profile = useProfile();

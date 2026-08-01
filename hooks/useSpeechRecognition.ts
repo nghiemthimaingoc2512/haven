@@ -9,7 +9,7 @@ import {
 } from "react";
 
 function subscribeToNothing() {
-  // support never changes over a session's lifetime — nothing to subscribe to
+  // support never changes over a session's lifetime - nothing to subscribe to
   return () => {};
 }
 
@@ -46,7 +46,7 @@ interface UseSpeechRecognitionResult {
 }
 
 /**
- * Wraps the browser Web Speech API. Owns nothing about the transcript itself —
+ * Wraps the browser Web Speech API. Owns nothing about the transcript itself -
  * it only reports final and interim chunks upward, so the caller stays the
  * single source of truth for the document (and can freely let the person
  * edit it by hand at any time).
@@ -124,7 +124,7 @@ export function useSpeechRecognition({
         return;
       }
       if (event.error === "no-speech" || event.error === "aborted") {
-        // benign — silence or an intentional stop; onend decides what happens next
+        // benign - silence or an intentional stop; onend decides what happens next
         return;
       }
       shouldBeListeningRef.current = false;
@@ -135,13 +135,13 @@ export function useSpeechRecognition({
       onInterimResultRef.current?.("");
       if (shouldBeListeningRef.current) {
         // the browser ends a session on its own after a stretch of silence even
-        // in continuous mode — restart quietly so talking feels uninterrupted
+        // in continuous mode - restart quietly so talking feels uninterrupted
         window.setTimeout(() => {
           if (!shouldBeListeningRef.current) return;
           try {
             recognition.start();
           } catch {
-            // already starting — ignore
+            // already starting - ignore
           }
         }, 50);
       }
@@ -164,7 +164,7 @@ export function useSpeechRecognition({
       recognition.start();
       setStatus("listening");
     } catch {
-      // already listening — ignore
+      // already listening - ignore
     }
   }, [getRecognition]);
 

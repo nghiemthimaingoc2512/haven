@@ -38,7 +38,7 @@ export function setNotifications(on: boolean): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, on ? "on" : "off");
   } catch {
-    // ignore — preference just won't persist this session
+    // ignore - preference just won't persist this session
   }
   for (const listener of listeners) listener();
 }

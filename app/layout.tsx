@@ -33,7 +33,7 @@ export default function RootLayout({
   return (
     // suppressHydrationWarning on <html>/<body> only: this guards against
     // browser extensions (Grammarly, password managers) that inject
-    // attributes into the DOM before React hydrates — a well-documented,
+    // attributes into the DOM before React hydrates - a well-documented,
     // unavoidable external cause, not an app bug. It does not suppress
     // mismatches anywhere else in the tree.
     <html

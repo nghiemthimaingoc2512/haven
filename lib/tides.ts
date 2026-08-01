@@ -30,7 +30,7 @@ const TIDES_VI: Record<string, TideContent> = {
   "golden-sunrise": {
     name: "Bình Minh Vàng",
     description: "Có gì đó ấm áp và nhẹ nhõm trong bạn hôm nay.",
-    glow: "Hãy giữ lấy cảm giác này một chút lâu hơn — bạn xứng đáng với nó.",
+    glow: "Hãy giữ lấy cảm giác này một chút lâu hơn - bạn xứng đáng với nó.",
   },
   "moonlit-calm": {
     name: "Ánh Trăng Yên Bình",
@@ -52,13 +52,13 @@ const TIDES_EN: Record<string, TideContent> = {
   },
   "quiet-sky": {
     name: "Quiet Sky",
-    description: "Things feel still — slower than usual.",
+    description: "Things feel still - slower than usual.",
     glow: "Resting is still a way of moving forward.",
   },
   "golden-sunrise": {
     name: "Golden Sunrise",
     description: "Something warm and a little lighter today.",
-    glow: "Let yourself hold onto this a bit longer — you've earned it.",
+    glow: "Let yourself hold onto this a bit longer - you've earned it.",
   },
   "moonlit-calm": {
     name: "Moonlit Calm",
@@ -137,7 +137,7 @@ function getServerDayIndexSnapshot(): number {
   return 0;
 }
 
-/** Same quote for everyone on a given calendar day — deterministic, resolved client-side. */
+/** Same quote for everyone on a given calendar day - deterministic, resolved client-side. */
 export function useDailyQuote(lang: Lang): string {
   const index = useSyncExternalStore(
     subscribeNever,

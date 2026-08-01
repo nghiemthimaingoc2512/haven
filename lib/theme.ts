@@ -67,5 +67,5 @@ export function useTheme(): ThemePreference {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-/** Inlined into a pre-hydration <script> in app/layout.tsx — keep in sync with readStoredTheme/applyToDom above. */
+/** Inlined into a pre-hydration <script> in app/layout.tsx - keep in sync with readStoredTheme/applyToDom above. */
 export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${STORAGE_KEY}");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;

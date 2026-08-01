@@ -65,7 +65,7 @@ function SettingsIcon() {
 
 const UTILITY_BTN = "flex h-8 w-8 items-center justify-center rounded-full text-muted transition-colors hover:bg-line/60 hover:text-ink";
 
-/** Global utilities — lighter weight than the main nav pills, always reachable regardless of viewport. */
+/** Global utilities - lighter weight than the main nav pills, always reachable regardless of viewport. */
 export function NavUtilities() {
   const { lang, setLang, t } = useLanguage();
   const theme = useTheme();

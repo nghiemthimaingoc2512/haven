@@ -10,7 +10,7 @@ export interface Profile {
 const STORAGE_KEY = "haven:profile";
 const DEFAULT_PROFILE: Profile = { name: "", onboarded: false };
 
-// Same useSyncExternalStore pattern as lib/i18n.tsx and lib/storage.ts —
+// Same useSyncExternalStore pattern as lib/i18n.tsx and lib/storage.ts -
 // deterministic default on the server/first paint, corrected immediately
 // after mount, same-tab updates broadcast through a plain listener set
 // rather than a setState-in-effect this repo's hooks lint flags.
@@ -75,7 +75,7 @@ export function completeOnboarding(name: string): void {
 /**
  * There's no real auth in this local-only prototype, so "sign out" means
  * what it honestly can here: return to onboarding. It never touches
- * memories or settings — only re-entering the app is required, nothing is
+ * memories or settings - only re-entering the app is required, nothing is
  * deleted. (Full data deletion is a separate, explicit action on Me.)
  */
 export function signOut(): void {

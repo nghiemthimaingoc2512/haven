@@ -7,13 +7,18 @@ import {
   type SpeechRecognitionStatus,
 } from "@/hooks/useSpeechRecognition";
 import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
-import { generateReflection, talkStarterPrompts } from "@/lib/reflection";
+import { generateReflection, getWhisperTurnReply, talkStarterPrompts } from "@/lib/reflection";
 import { saveMemory, createMemoryId } from "@/lib/storage";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/mascot/Moon";
 
 type Mode = "voice" | "text";
-type Phase = "composing" | "processing";
+type Phase = "composing" | "ending";
+
+interface Message {
+  role: "user" | "whisper";
+  text: string;
+}
 
 function MicIcon({ className }: { className?: string }) {
   return (
@@ -124,6 +129,16 @@ export default function TalkPage() {
   );
 }
 
+/**
+ * Whisper is an ongoing conversation, not a one-shot form: each message the
+ * user sends becomes a turn, Whisper replies with a short real
+ * acknowledgment plus (while there's a real thoughtful question left to
+ * ask) one focused follow-up, and the thread keeps going until the user
+ * chooses to end it. Ending is what turns the whole transcript into one
+ * saved memory - the existing generateReflection/saveMemory pipeline,
+ * unchanged, just now fed the full conversation instead of a single
+ * utterance.
+ */
 function TalkPageInner() {
   const { lang, t } = useLanguage();
   const router = useRouter();
@@ -133,13 +148,16 @@ function TalkPageInner() {
     searchParams.get("mode") === "text" ? "text" : "voice",
   );
   const [phase, setPhase] = useState<Phase>("composing");
-  const [processingStep, setProcessingStep] = useState<"listening" | "reflecting">("listening");
+  const [endingStep, setEndingStep] = useState<"listening" | "reflecting">("listening");
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [whisperTyping, setWhisperTyping] = useState(false);
   const [text, setText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const threadEndRef = useRef<HTMLDivElement>(null);
 
   const appendFinal = useCallback((chunk: string) => {
     setText((prev) => (prev ? `${prev} ${chunk}` : chunk));
@@ -183,6 +201,10 @@ function TalkPageInner() {
     if (mode === "text") textareaRef.current?.focus();
   }, [mode]);
 
+  useEffect(() => {
+    threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, whisperTyping]);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (status === "listening") pause();
     setInterimText("");
@@ -216,22 +238,50 @@ function TalkPageInner() {
   );
   const hasContent = text.trim().length > 0;
   const hasMeaningfulContent = wordCount >= 3;
+  const hasConversation = messages.length > 0;
 
-  const handleFinish = useCallback(() => {
+  // Sends the current draft as one turn - Whisper replies, the thread
+  // continues. This never ends the conversation by itself.
+  const handleSendTurn = useCallback(() => {
     if (!hasMeaningfulContent) return;
     stop();
-    setPhase("processing");
-    setProcessingStep("listening");
+    const userText = text.trim();
+    const userHistory = [...messages.filter((m) => m.role === "user").map((m) => m.text), userText];
+
+    setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    setText("");
+    setInterimText("");
+    setElapsedSeconds(0);
+    setWhisperTyping(true);
 
     window.setTimeout(() => {
-      setProcessingStep("reflecting");
+      const reply = getWhisperTurnReply(userHistory, lang);
+      setMessages((prev) => [...prev, { role: "whisper", text: reply.message }]);
+      setWhisperTyping(false);
+    }, 900);
+  }, [hasMeaningfulContent, text, stop, messages, lang]);
+
+  // Ends the whole conversation - the real reflection pipeline runs on
+  // everything that was actually said, not just the last line.
+  const handleEndConversation = useCallback(() => {
+    stop();
+    const finalTranscript = [...messages.filter((m) => m.role === "user").map((m) => m.text), text.trim()]
+      .filter(Boolean)
+      .join("\n");
+    if (!finalTranscript.trim()) return;
+
+    setPhase("ending");
+    setEndingStep("listening");
+
+    window.setTimeout(() => {
+      setEndingStep("reflecting");
       window.setTimeout(() => {
-        const generated = generateReflection(text.trim(), lang);
+        const generated = generateReflection(finalTranscript, lang);
         saveMemory({
           id: createMemoryId(),
           createdAt: new Date().toISOString(),
           lang,
-          transcript: text.trim(),
+          transcript: finalTranscript,
           reflection: generated.reflection,
           standout: generated.standout,
           emotion: generated.emotion,
@@ -241,18 +291,18 @@ function TalkPageInner() {
           topics: generated.topics,
           people: generated.people,
         });
-        // /reflection reads storage fresh on mount — memories[0] is this
+        // /reflection reads storage fresh on mount - memories[0] is this
         // session, memories[1] (if any) is what "last time" refers to.
         router.push("/reflection");
       }, 900);
     }, 900);
-  }, [hasMeaningfulContent, lang, stop, text, router]);
+  }, [messages, text, stop, lang, router]);
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (mode !== "text") return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleFinish();
+      handleSendTurn();
     }
   };
 
@@ -263,12 +313,12 @@ function TalkPageInner() {
     status === "unsupported";
   const showWaveform = status === "listening" || status === "paused";
 
-  if (phase === "processing") {
+  if (phase === "ending") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
         <Moon size={80} priority />
-        <p key={processingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
-          {processingStep === "listening" ? t.processingListening : t.processingReflecting}
+        <p key={endingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
+          {endingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
       </div>
     );
@@ -276,8 +326,19 @@ function TalkPageInner() {
 
   return (
     <div className="relative flex flex-1 flex-col px-6 py-10">
-      {/* Subtle corner mode switch — the moment stays quiet, the control doesn't compete for attention */}
-      <div className="flex justify-end">
+      {/* Top row: end-conversation (once there's a real thread) + the quiet corner mode switch */}
+      <div className="flex items-center justify-between">
+        <div>
+          {hasConversation && (
+            <button
+              type="button"
+              onClick={handleEndConversation}
+              className="text-sm text-primary hover:opacity-70"
+            >
+              {t.finishReflection}
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-1 rounded-full border border-line p-1 text-xs">
           <button
             type="button"
@@ -304,51 +365,77 @@ function TalkPageInner() {
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
-        {mode === "voice" && (
-          <div className="flex flex-col items-center gap-3">
-            <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} priority />
-            {!hasContent && status === "idle" && (
-              <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
+      <div className="flex flex-1 flex-col overflow-y-auto">
+        {!hasConversation ? (
+          <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
+            {mode === "voice" && (
+              <div className="flex flex-col items-center gap-3">
+                <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} priority />
+                {!hasContent && status === "idle" && (
+                  <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
+                )}
+              </div>
+            )}
+
+            {mode === "text" && !hasContent && (
+              <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2">
+                {talkStarterPrompts(lang).map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => {
+                      setText(prompt);
+                      textareaRef.current?.focus();
+                    }}
+                    className="haven-surface animate-rise rounded-full px-4 py-2 text-sm text-ink transition-transform hover:-translate-y-0.5"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
             )}
           </div>
-        )}
-
-        <div className="w-full max-w-2xl">
-          <textarea
-            ref={textareaRef}
-            value={displayValue}
-            onChange={handleTextChange}
-            onKeyDown={handleTextareaKeyDown}
-            placeholder={t.talkPlaceholder}
-            rows={1}
-            autoComplete="off"
-            spellCheck={false}
-            className="w-full resize-none overflow-hidden bg-transparent text-[1.35rem] leading-relaxed text-ink placeholder:text-line focus:outline-none"
-            autoFocus
-          />
-        </div>
-
-        {mode === "text" && !hasContent && (
-          <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2">
-            {talkStarterPrompts(lang).map((prompt) => (
-              <button
-                key={prompt}
-                type="button"
-                onClick={() => {
-                  setText(prompt);
-                  textareaRef.current?.focus();
-                }}
-                className="haven-surface animate-rise rounded-full px-4 py-2 text-sm text-ink transition-transform hover:-translate-y-0.5"
-              >
-                {prompt}
-              </button>
+        ) : (
+          <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 py-6">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                {m.role === "whisper" && <Moon size={28} animate={false} />}
+                <div
+                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-[1.05rem] leading-relaxed ${
+                    m.role === "user" ? "bg-primary text-white" : "haven-surface text-ink"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              </div>
             ))}
+            {whisperTyping && (
+              <div className="flex items-end gap-2 justify-start">
+                <Moon size={28} animate={false} />
+                <div className="haven-surface rounded-2xl px-4 py-3 text-sm italic text-muted">{t.talkTyping}</div>
+              </div>
+            )}
+            <div ref={threadEndRef} />
           </div>
         )}
       </div>
 
-      <div className="flex w-full flex-col items-center gap-4 pb-6">
+      <div className="mx-auto w-full max-w-2xl">
+        <textarea
+          ref={textareaRef}
+          value={displayValue}
+          onChange={handleTextChange}
+          onKeyDown={handleTextareaKeyDown}
+          placeholder={t.talkPlaceholder}
+          rows={1}
+          autoComplete="off"
+          spellCheck={false}
+          className="w-full resize-none overflow-hidden bg-transparent text-[1.35rem] leading-relaxed text-ink placeholder:text-line focus:outline-none"
+          autoFocus
+        />
+      </div>
+
+      <div className="flex w-full flex-col items-center gap-4 pb-6 pt-4">
         {mode === "voice" ? (
           <>
             {showTroubleMessage && (
@@ -409,12 +496,12 @@ function TalkPageInner() {
 
               <button
                 type="button"
-                onClick={handleFinish}
+                onClick={handleSendTurn}
                 className={`text-sm text-primary transition-opacity hover:opacity-70 ${
                   hasMeaningfulContent ? "opacity-100" : "pointer-events-none opacity-0"
                 }`}
               >
-                {t.finishReflection}
+                {t.send}
               </button>
             </div>
 
@@ -436,7 +523,7 @@ function TalkPageInner() {
               </button>
               <button
                 type="button"
-                onClick={handleFinish}
+                onClick={handleSendTurn}
                 disabled={!hasMeaningfulContent}
                 className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm ${
                   hasMeaningfulContent

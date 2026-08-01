@@ -2,35 +2,27 @@ import type { Lang } from "@/lib/i18n";
 
 type QueryType = "decision" | "planning" | "general";
 
-export interface AuroraOpening {
-  situation: string;
-  hypotheses: string[];
-  rootCauseQuestion: string;
-  framework: string;
-  optionsDetected: [string, string] | null;
-  type: QueryType;
-}
-
-export interface AuroraFollowUp {
-  tradeoffs: string[];
-  recommendation: string;
-  actionPlan: string[];
-  reflectionPrompt: string;
-}
-
 /**
- * Aurora is a consultant, not a listener: it never jumps straight to advice.
- * This mock still does real (if simple) analysis — pattern/keyword matching,
- * an actual "A or B" split — rather than pretending to reason about it. The
- * real model integration replaces this function; the UI contract stays the
- * same.
+ * Aurora is a reflective coach, not an essay-writer: she never dumps a full
+ * report. This mock still does real (if simple) analysis - pattern/keyword
+ * matching, an actual "A or B" split - rather than pretending to reason
+ * about it. The real model integration replaces the phase content
+ * functions below; the turn-by-turn contract stays the same.
+ *
+ * The conversation is a real state machine across seven phases - Understand,
+ * Clarify, Explore, Challenge assumptions, Reflect, Generate insight, Create
+ * action - each phase a genuine turn that echoes the user's actual prior
+ * answer back in, never a fabricated claim of understanding. The first four
+ * phases each end in one question and wait for a real reply; the last three
+ * (Reflect, Insight, Action) are short consecutive statements - no more
+ * question left to ask, Aurora is wrapping up what was actually said.
  *
  * Twelve situation patterns get a hand-built, evidence-grounded hypothesis
- * set — each hypothesis is specific to that situation, the way a consultant
+ * set - each hypothesis is specific to that situation, the way a consultant
  * who actually listened would offer possibilities, not a fortune-teller's
  * generic psychology. Critically: when nothing matches, Aurora does NOT fall
  * back to a generic hypothesis list. Guessing psychology with no grounding
- * is exactly the failure mode this is designed to avoid — instead it asks a
+ * is exactly the failure mode this is designed to avoid - instead it asks a
  * real clarifying question first, the same way a consultant says "I need to
  * understand more before I can offer possibilities" rather than pretending
  * to already know.
@@ -53,7 +45,7 @@ function detectOptions(text: string, lang: Lang): [string, string] | null {
   const b = parts[1].trim().split(/[,.?!]/)[0]?.trim();
   if (!a || !b || a.length > 40 || b.length > 40) return null;
   // "hay" is also the Vietnamese adverb for "often" ("hay trì hoãn" = "often
-  // procrastinate"), not just "or" — a real A-or-B option is a multi-word
+  // procrastinate"), not just "or" - a real A-or-B option is a multi-word
   // phrase, not a single leftover pronoun, so require both sides to clear a
   // minimum word count before treating this as a genuine comparison.
   if (wordCount(a) < 2 || wordCount(b) < 2) return null;
@@ -154,7 +146,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
     situation: "Bạn đang thấy mình cứ trì hoãn một việc quan trọng.",
     hypotheses: [
       "Sợ thất bại?",
-      "Cầu toàn — muốn làm hoàn hảo nên chưa dám bắt đầu?",
+      "Cầu toàn - muốn làm hoàn hảo nên chưa dám bắt đầu?",
       "Kiệt sức, không còn năng lượng?",
       "Thiếu rõ ràng về việc cần làm?",
       "Mệt mỏi vì phải quyết định quá nhiều thứ khác?",
@@ -186,7 +178,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Chi phí cơ hội của lựa chọn hiện tại?",
     ],
     rootCauseQuestion: "Đây có thật sự là vấn đề thu nhập, hay là một trong những điều trên?",
-    framework: "Đây có thể không phải là vấn đề thu nhập — hãy nhìn sâu hơn triệu chứng bề mặt.",
+    framework: "Đây có thể không phải là vấn đề thu nhập - hãy nhìn sâu hơn triệu chứng bề mặt.",
   },
   "feel-failure": {
     situation: "Bạn đang cảm thấy mình là một thất bại.",
@@ -195,11 +187,11 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Một sự việc gần đây đang bị khái quát thành cả con người bạn?",
       "Bạn đang đánh giá bản thân qua kỳ vọng của người khác?",
     ],
-    rootCauseQuestion: "Điều gì khiến bạn kết luận mình thất bại — và đó có phải là bằng chứng khách quan không?",
+    rootCauseQuestion: "Điều gì khiến bạn kết luận mình thất bại - và đó có phải là bằng chứng khách quan không?",
     framework: "Tách bạch bằng chứng thực tế khỏi cảm xúc đang chi phối bạn.",
   },
   "living-alone": {
-    situation: "Bạn vừa trải qua một thay đổi lớn — từ sống cùng người khác sang sống một mình.",
+    situation: "Bạn vừa trải qua một thay đổi lớn - từ sống cùng người khác sang sống một mình.",
     hypotheses: [
       "Bạn đang cảm thấy cô đơn?",
       "Bạn lo về việc phải gánh chi phí một mình?",
@@ -208,7 +200,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Thay đổi này gợi nhắc đến một trải nghiệm khác trong quá khứ?",
     ],
     rootCauseQuestion: "Điều nào nghe gần đúng nhất với bạn?",
-    framework: "Một thay đổi hoàn cảnh sống thường mang theo nhiều lớp cảm xúc khác nhau — hãy tách chúng ra trước khi tìm giải pháp.",
+    framework: "Một thay đổi hoàn cảnh sống thường mang theo nhiều lớp cảm xúc khác nhau - hãy tách chúng ra trước khi tìm giải pháp.",
   },
   breakup: {
     situation: "Bạn vừa trải qua một cuộc chia tay.",
@@ -219,7 +211,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Nỗi sợ cô đơn lớn hơn nỗi buồn về người đó?",
     ],
     rootCauseQuestion: "Điều nào đang chiếm nhiều tâm trí bạn nhất lúc này?",
-    framework: "Chia tay thường gộp chung nhiều loại mất mát khác nhau — đáng để tách ra mới biết mình đang thực sự đau vì điều gì.",
+    framework: "Chia tay thường gộp chung nhiều loại mất mát khác nhau - đáng để tách ra mới biết mình đang thực sự đau vì điều gì.",
   },
   "job-loss": {
     situation: "Bạn vừa mất công việc của mình.",
@@ -230,7 +222,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Không chắc bước tiếp theo là gì?",
     ],
     rootCauseQuestion: "Trong những điều trên, điều gì đang nặng nề nhất với bạn ngay lúc này?",
-    framework: "Mất việc thường là một cú sốc tài chính và một cú sốc bản sắc cùng lúc — hai vấn đề cần hai hướng giải quyết khác nhau.",
+    framework: "Mất việc thường là một cú sốc tài chính và một cú sốc bản sắc cùng lúc - hai vấn đề cần hai hướng giải quyết khác nhau.",
   },
   "family-conflict": {
     situation: "Bạn vừa có mâu thuẫn với gia đình.",
@@ -241,7 +233,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Bạn lo về việc mối quan hệ này sẽ ra sao sau chuyện này?",
     ],
     rootCauseQuestion: "Cái nào nghe gần với điều bạn đang cảm thấy nhất?",
-    framework: "Mâu thuẫn gia đình thường không chỉ về chuyện vừa xảy ra — đáng để phân biệt sự việc cụ thể với căng thẳng nền phía sau.",
+    framework: "Mâu thuẫn gia đình thường không chỉ về chuyện vừa xảy ra - đáng để phân biệt sự việc cụ thể với căng thẳng nền phía sau.",
   },
   "health-scare": {
     situation: "Bạn vừa nhận được một tin tức sức khỏe khiến bạn lo lắng.",
@@ -251,7 +243,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Bạn chưa có đủ thông tin để biết mức độ nghiêm trọng thực sự?",
       "Điều này đang buộc bạn nhìn lại những ưu tiên khác trong cuộc sống?",
     ],
-    rootCauseQuestion: "Điều gì đang chiếm tâm trí bạn nhiều nhất — nỗi sợ, hay sự không chắc chắn?",
+    rootCauseQuestion: "Điều gì đang chiếm tâm trí bạn nhiều nhất - nỗi sợ, hay sự không chắc chắn?",
     framework: "Trước khi lo xa, đáng để tách rõ điều bạn đã biết chắc và điều vẫn còn là phỏng đoán.",
   },
   grief: {
@@ -261,18 +253,18 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Có điều gì đó chưa nói hết mà giờ bạn đang mang theo?",
       "Bạn lo về việc phải tiếp tục cuộc sống như thể không có gì xảy ra?",
     ],
-    rootCauseQuestion: "Ngay lúc này, bạn cần điều gì nhất — được lắng nghe, hay một điều gì đó cụ thể hơn?",
-    framework: "Đây không phải là một vấn đề cần giải quyết ngay — hãy để mình chậm lại trước.",
+    rootCauseQuestion: "Ngay lúc này, bạn cần điều gì nhất - được lắng nghe, hay một điều gì đó cụ thể hơn?",
+    framework: "Đây không phải là một vấn đề cần giải quyết ngay - hãy để mình chậm lại trước.",
   },
   relocation: {
     situation: "Bạn vừa chuyển đến một nơi ở mới.",
     hypotheses: [
       "Bạn đang nhớ những mối quan hệ và sự quen thuộc ở nơi cũ?",
-      "Áp lực phải xây dựng lại mọi thứ từ đầu — bạn bè, thói quen, nơi chốn?",
+      "Áp lực phải xây dựng lại mọi thứ từ đầu - bạn bè, thói quen, nơi chốn?",
       "Bạn đang tự hỏi liệu quyết định chuyển đến đây có đúng không?",
     ],
     rootCauseQuestion: "Điều nào đang nặng nề nhất với bạn lúc này?",
-    framework: "Một nơi ở mới thường đi kèm nhiều mất mát nhỏ trước khi có điều gì mới thay thế — bình thường nếu cảm giác này chưa qua ngay.",
+    framework: "Một nơi ở mới thường đi kèm nhiều mất mát nhỏ trước khi có điều gì mới thay thế - bình thường nếu cảm giác này chưa qua ngay.",
   },
   "friendship-fading": {
     situation: "Bạn đang cảm thấy một tình bạn quan trọng đang xa cách dần.",
@@ -282,7 +274,7 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
       "Bạn lo mình là người duy nhất cố gắng giữ mối quan hệ này?",
     ],
     rootCauseQuestion: "Điều nào nghe gần đúng nhất với những gì đang xảy ra?",
-    framework: "Tình bạn phai nhạt hiếm khi có một nguyên nhân duy nhất — đáng để xem đây là một sự kiện cụ thể hay một xu hướng dần dần.",
+    framework: "Tình bạn phai nhạt hiếm khi có một nguyên nhân duy nhất - đáng để xem đây là một sự kiện cụ thể hay một xu hướng dần dần.",
   },
 };
 
@@ -291,7 +283,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
     situation: "You're finding yourself putting off something important.",
     hypotheses: [
       "Fear of failure?",
-      "Perfectionism — not starting because it won't be perfect?",
+      "Perfectionism - not starting because it won't be perfect?",
       "Burnout?",
       "Lack of clarity about what to actually do?",
       "Decision fatigue from too many other choices?",
@@ -309,7 +301,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "A career pivot?",
       "Graduate school?",
     ],
-    rootCauseQuestion: "Before evaluating resignation — which of these outcomes matters most to you?",
+    rootCauseQuestion: "Before evaluating resignation - which of these outcomes matters most to you?",
     framework: "Define success first, then evaluate the options against it.",
   },
   "need-money": {
@@ -323,7 +315,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "The opportunity cost of your current choices?",
     ],
     rootCauseQuestion: "Is this actually an income problem, or one of these instead?",
-    framework: "This may not be an income problem — worth looking past the surface symptom.",
+    framework: "This may not be an income problem - worth looking past the surface symptom.",
   },
   "feel-failure": {
     situation: "You're feeling like a failure right now.",
@@ -332,11 +324,11 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "One recent event is being generalized into your whole identity?",
       "You're evaluating yourself by someone else's expectations?",
     ],
-    rootCauseQuestion: "What evidence makes you conclude you're a failure — and is it objective?",
+    rootCauseQuestion: "What evidence makes you conclude you're a failure - and is it objective?",
     framework: "Separate the actual evidence from the emotion driving this conclusion.",
   },
   "living-alone": {
-    situation: "You've just been through a real change — from living with someone to living on your own.",
+    situation: "You've just been through a real change - from living with someone to living on your own.",
     hypotheses: [
       "You're feeling lonely?",
       "You're worried about carrying costs alone now?",
@@ -345,7 +337,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "This change is echoing another experience from before?",
     ],
     rootCauseQuestion: "Which of these feels closest to what's actually going on?",
-    framework: "A change in living situation usually carries more than one kind of loss — worth separating them before looking for a fix.",
+    framework: "A change in living situation usually carries more than one kind of loss - worth separating them before looking for a fix.",
   },
   breakup: {
     situation: "You've just been through a breakup.",
@@ -356,7 +348,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "The fear of being alone is bigger than the sadness about them?",
     ],
     rootCauseQuestion: "Which of these is taking up the most space in your head right now?",
-    framework: "A breakup usually bundles several different losses together — worth separating them to know what you're actually grieving.",
+    framework: "A breakup usually bundles several different losses together - worth separating them to know what you're actually grieving.",
   },
   "job-loss": {
     situation: "You've just lost your job.",
@@ -367,7 +359,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "Not knowing what the next step even is?",
     ],
     rootCauseQuestion: "Of those, which one feels heaviest right now?",
-    framework: "Job loss is usually a financial shock and an identity shock at the same time — they need two different responses.",
+    framework: "Job loss is usually a financial shock and an identity shock at the same time - they need two different responses.",
   },
   "family-conflict": {
     situation: "You've just had a conflict with your family.",
@@ -378,7 +370,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "You're worried about what this means for the relationship going forward?",
     ],
     rootCauseQuestion: "Which of these feels closest to what you're actually feeling?",
-    framework: "Family conflict is rarely only about what just happened — worth separating the specific incident from the tension underneath it.",
+    framework: "Family conflict is rarely only about what just happened - worth separating the specific incident from the tension underneath it.",
   },
   "health-scare": {
     situation: "You've just received health news that's worrying you.",
@@ -388,7 +380,7 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "You don't have enough information yet to know how serious this actually is?",
       "This is forcing you to reconsider other priorities in your life?",
     ],
-    rootCauseQuestion: "What's occupying the most space right now — the fear, or the uncertainty?",
+    rootCauseQuestion: "What's occupying the most space right now - the fear, or the uncertainty?",
     framework: "Before catastrophizing, it's worth separating what you actually know from what's still just a guess.",
   },
   grief: {
@@ -398,18 +390,18 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "There's something unsaid that you're carrying now?",
       "You're worried about having to keep going as if nothing happened?",
     ],
-    rootCauseQuestion: "Right now, what do you need most — to be heard, or something more specific?",
-    framework: "This isn't a problem to solve right now — let's slow down first.",
+    rootCauseQuestion: "Right now, what do you need most - to be heard, or something more specific?",
+    framework: "This isn't a problem to solve right now - let's slow down first.",
   },
   relocation: {
     situation: "You've just moved somewhere new.",
     hypotheses: [
       "You're missing the relationships and familiarity from before?",
-      "The pressure of rebuilding everything from scratch — friends, routines, a sense of place?",
+      "The pressure of rebuilding everything from scratch - friends, routines, a sense of place?",
       "You're second-guessing whether the move itself was the right call?",
     ],
     rootCauseQuestion: "Which of these feels heaviest right now?",
-    framework: "A new place usually comes with several small losses before anything new replaces them — it's normal if that hasn't passed yet.",
+    framework: "A new place usually comes with several small losses before anything new replaces them - it's normal if that hasn't passed yet.",
   },
   "friendship-fading": {
     situation: "You're feeling an important friendship drift away.",
@@ -419,99 +411,26 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
       "You're worried you're the only one still trying?",
     ],
     rootCauseQuestion: "Which of these feels closest to what's actually happening?",
-    framework: "Friendships rarely fade for just one reason — worth figuring out if this is one event or a slow drift.",
+    framework: "Friendships rarely fade for just one reason - worth figuring out if this is one event or a slow drift.",
   },
 };
 
-// No pattern matched and no options were detected — there isn't enough
+// No pattern matched and no options were detected - there isn't enough
 // grounded signal to offer hypotheses honestly. A real consultant says "I
 // need to understand more" here instead of guessing psychology. These are
-// the only genuinely open-ended clarifying questions in the system — they
+// the only genuinely open-ended clarifying questions in the system - they
 // ask, they never claim to already know what's going on.
 const CLARIFYING_QUESTION_VI: Record<"decision" | "planning" | "general", string> = {
-  decision: "Điều gì khiến quyết định này khó nhất — là quá ít lựa chọn, hay quá nhiều lựa chọn?",
+  decision: "Điều gì khiến quyết định này khó nhất - là quá ít lựa chọn, hay quá nhiều lựa chọn?",
   planning: "Bạn đã hình dung rõ đích đến chưa, hay chính bước đầu tiên mới là điều mơ hồ nhất?",
   general: "Nếu phải chọn một câu để mô tả điều đang khó nhất lúc này, bạn sẽ nói gì?",
 };
 
 const CLARIFYING_QUESTION_EN: Record<"decision" | "planning" | "general", string> = {
-  decision: "What makes this decision hardest — too few options, or too many?",
+  decision: "What makes this decision hardest - too few options, or too many?",
   planning: "Do you already know the destination clearly, or is the first step the unclear part?",
   general: "If you had to name the single hardest part of this right now, what would you say?",
 };
-
-function tradeoffsFor(
-  type: "decision" | "planning" | "general",
-  options: [string, string] | null,
-  context: string,
-  rootCauseReply: string,
-  lang: Lang,
-): string[] {
-  const contextLine = context.trim()
-    ? lang === "vi"
-      ? [`Bạn vừa nhắc đến: "${context.trim()}" — điều đó ảnh hưởng thế nào đến hướng bạn chọn?`]
-      : [`You mentioned: "${context.trim()}" — how does that shape which way you lean?`]
-    : [];
-  // A real reply to the root-cause question, fed straight back in — this is
-  // what makes the second half of the conversation actually informed by
-  // what the user just said, not a canned continuation.
-  const replyLine = rootCauseReply.trim()
-    ? lang === "vi"
-      ? [`Bạn vừa nói: "${rootCauseReply.trim()}" — điều đó cho thấy gì về hướng bạn nên đi?`]
-      : [`You just said: "${rootCauseReply.trim()}" — what does that suggest about which way to go?`]
-    : [];
-
-  if (options) {
-    const [a, b] = options;
-    return [
-      ...(lang === "vi"
-        ? [
-            `${a} có thể mang lại điều gì mà ${b} không có?`,
-            `${b} có thể mang lại điều gì mà ${a} không có?`,
-            "Lựa chọn nào khiến bạn thấy nhẹ nhõm hơn khi tưởng tượng một năm sau?",
-          ]
-        : [
-            `What might ${a} give you that ${b} doesn't?`,
-            `What might ${b} give you that ${a} doesn't?`,
-            "Which choice feels lighter when you imagine it a year from now?",
-          ]),
-      ...contextLine,
-      ...replyLine,
-    ];
-  }
-  if (type === "planning") {
-    return [
-      ...(lang === "vi"
-        ? [
-            "Bước nào trong kế hoạch này thực sự phụ thuộc vào người khác?",
-            "Nếu tuần này không hoàn hảo, điều gì vẫn được coi là tiến bộ?",
-            "Bạn đang lên kế hoạch cho điều mình muốn, hay điều mình nghĩ nên muốn?",
-          ]
-        : [
-            "Which part of this plan actually depends on someone else?",
-            "If this week isn't perfect, what would still count as progress?",
-            "Are you planning for what you want, or what you think you should want?",
-          ]),
-      ...contextLine,
-      ...replyLine,
-    ];
-  }
-  return [
-    ...(lang === "vi"
-      ? [
-          "Điều gì thực sự quan trọng với bạn trong chuyện này?",
-          "Nếu một người bạn thân đang ở vị trí của bạn, bạn sẽ khuyên họ điều gì?",
-          "Có nỗi sợ nào đang âm thầm ảnh hưởng đến điều này không?",
-        ]
-      : [
-          "What actually matters to you here?",
-          "If a close friend were in your position, what would you tell them?",
-          "Is there a quiet fear shaping this more than you'd like?",
-        ]),
-    ...contextLine,
-    ...replyLine,
-  ];
-}
 
 function actionPlanFor(
   type: "decision" | "planning" | "general",
@@ -523,11 +442,11 @@ function actionPlanFor(
     return lang === "vi"
       ? [
           `Chọn 1 tiêu chí quan trọng nhất để so sánh ${a} và ${b}.`,
-          "Đặt một mốc thời gian cụ thể để quyết định — đừng để nó treo vô thời hạn.",
+          "Đặt một mốc thời gian cụ thể để quyết định - đừng để nó treo vô thời hạn.",
         ]
       : [
           `Pick the single most important criterion to compare ${a} vs ${b}.`,
-          "Set a real deadline to decide — don't let it hang indefinitely.",
+          "Set a real deadline to decide - don't let it hang indefinitely.",
         ];
   }
   if (type === "planning") {
@@ -541,93 +460,302 @@ function actionPlanFor(
 }
 
 const RECOMMENDATION_VI =
-  "Thử viết ra 3 điều bạn thực sự muốn trong chuyện này — không phải điều người khác mong đợi ở bạn.";
+  "Thử viết ra 3 điều bạn thực sự muốn trong chuyện này - không phải điều người khác mong đợi ở bạn.";
 const RECOMMENDATION_EN =
-  "Try writing down 3 things you actually want here — not what you think others expect of you.";
+  "Try writing down 3 things you actually want here - not what you think others expect of you.";
 
 const REFLECTION_PROMPT_VI = "Sau cuộc trò chuyện này, điều gì rõ ràng hơn với bạn so với lúc bắt đầu?";
 const REFLECTION_PROMPT_EN = "After this conversation, what's clearer to you than when you started?";
 
-/**
- * Aurora talks in two real turns rather than dumping a full report:
- *
- * 1. openConversation() — Situation, Hypotheses, Root-cause question,
- *    Framework. This is what Aurora "says" first.
- * 2. The UI collects a real reply to the root-cause question (or lets the
- *    user skip it).
- * 3. continueConversation() — Trade-offs, Recommendation, Action plan,
- *    Reflection, now informed by that reply if one was given.
- *
- * Never skips straight to advice — hypotheses only get skipped when the
- * input already names concrete options to compare, since at that point the
- * ambiguity to resolve is which option, not what the underlying issue is.
- */
-export function openConversation(question: string, lang: Lang): AuroraOpening {
-  const type = detectQueryType(question, lang);
-  const options = detectOptions(question, lang);
-  const pattern = detectPattern(question, lang);
+// Strips a trailing ./!/? before echoing a reply back in quotes, so it never
+// reads as double punctuation (`"...trước.".`) once wrapped in its own
+// closing quote and sentence.
+function quoteReply(reply: string): string {
+  return reply.trim().replace(/[.!?]+$/, "");
+}
 
-  let stage: StageContent;
-  if (pattern) {
-    stage = (lang === "vi" ? PATTERN_CONTENT_VI : PATTERN_CONTENT_EN)[pattern];
-  } else if (options) {
+// A short lead-in Aurora says once, before the first real question - never
+// repeated, never padded into a paragraph.
+function openingLine(pattern: PatternKey | null, options: [string, string] | null, lang: Lang): string {
+  if (pattern) return (lang === "vi" ? PATTERN_CONTENT_VI : PATTERN_CONTENT_EN)[pattern].situation;
+  if (options) {
     const [a, b] = options;
-    stage = {
-      situation: lang === "vi" ? `Bạn đang cân nhắc giữa ${a} và ${b}.` : `You're weighing ${a} against ${b}.`,
-      hypotheses: [],
-      rootCauseQuestion:
-        lang === "vi"
-          ? "Điều gì thực sự quan trọng với bạn khi so sánh hai lựa chọn này?"
-          : "What actually matters most to you in this comparison?",
-      framework: lang === "vi" ? "Khung so sánh lựa chọn theo giá trị dài hạn." : "A long-term value comparison framework.",
-    };
-  } else {
-    // No grounded pattern, no options — don't fabricate hypotheses. Echo
-    // back what was actually said, and ask a real clarifying question
-    // instead of guessing at psychology with nothing to support it.
-    const trimmed = question.trim();
-    stage = {
-      situation: lang === "vi" ? `Bạn vừa chia sẻ: "${trimmed}"` : `You just shared: "${trimmed}"`,
-      hypotheses: [],
-      rootCauseQuestion: (lang === "vi" ? CLARIFYING_QUESTION_VI : CLARIFYING_QUESTION_EN)[type],
-      framework:
-        lang === "vi"
-          ? "Mình muốn hiểu rõ hơn trước khi cùng bạn tìm hướng đi."
-          : "I want to understand more before we look for a direction together.",
-    };
+    return lang === "vi" ? `Bạn đang cân nhắc giữa ${a} và ${b}.` : `You're weighing ${a} against ${b}.`;
   }
+  return lang === "vi" ? "Mình đang nghe đây." : "I'm listening.";
+}
+
+function understandQuestion(
+  pattern: PatternKey | null,
+  options: [string, string] | null,
+  type: QueryType,
+  lang: Lang,
+): string {
+  if (pattern) return (lang === "vi" ? PATTERN_CONTENT_VI : PATTERN_CONTENT_EN)[pattern].rootCauseQuestion;
+  if (options) {
+    return lang === "vi"
+      ? "Điều gì thực sự quan trọng với bạn khi so sánh hai lựa chọn này?"
+      : "What actually matters most to you in this comparison?";
+  }
+  return (lang === "vi" ? CLARIFYING_QUESTION_VI : CLARIFYING_QUESTION_EN)[type];
+}
+
+function clarifyQuestion(
+  options: [string, string] | null,
+  understandReply: string,
+  lang: Lang,
+): string {
+  const reply = quoteReply(understandReply);
+  if (options) {
+    const [a, b] = options;
+    return lang === "vi"
+      ? `Giữa ${a} và ${b}, điều gì đang kéo bạn về một phía hơn?`
+      : `Between ${a} and ${b}, what's actually pulling you toward one over the other?`;
+  }
+  if (!reply) {
+    return lang === "vi" ? "Điều đó bắt đầu từ khi nào?" : "When did this start?";
+  }
+  return lang === "vi"
+    ? `Bạn vừa nói: "${reply}". Điều đó bắt đầu từ khi nào, hay đây là cảm giác mới gần đây?`
+    : `You just said: "${reply}". When did this start, or is it something newer?`;
+}
+
+function exploreQuestion(type: QueryType, options: [string, string] | null, clarifyReply: string, lang: Lang): string {
+  const reply = quoteReply(clarifyReply);
+  const lead = reply
+    ? lang === "vi"
+      ? `Bạn vừa nói: "${reply}". `
+      : `You just said: "${reply}". `
+    : "";
+  if (options) {
+    return (
+      lead +
+      (lang === "vi"
+        ? "Nếu bạn tưởng tượng mỗi lựa chọn một năm từ bây giờ, điều gì khác nhau nhất?"
+        : "If you picture each option a year from now, what's most different?")
+    );
+  }
+  if (type === "planning") {
+    return (
+      lead +
+      (lang === "vi"
+        ? "Phần nào của kế hoạch này khiến bạn thấy chắc chắn nhất, và phần nào còn mơ hồ?"
+        : "Which part of this plan feels most solid, and which part still feels foggy?")
+    );
+  }
+  return (
+    lead +
+    (lang === "vi"
+      ? "Khi điều này xảy ra, nó ảnh hưởng thế nào đến những việc khác trong ngày của bạn?"
+      : "When this happens, how does it ripple into the rest of your day?")
+  );
+}
+
+function challengeQuestion(type: QueryType, options: [string, string] | null, exploreReply: string, lang: Lang): string {
+  const reply = quoteReply(exploreReply);
+  const lead = reply
+    ? lang === "vi"
+      ? `Bạn vừa nói: "${reply}". `
+      : `You just said: "${reply}". `
+    : "";
+  if (options) {
+    return (
+      lead +
+      (lang === "vi"
+        ? "Ai nói với bạn rằng đây phải là một lựa chọn đúng-sai duy nhất?"
+        : "Who says this has to be a single right-or-wrong call?")
+    );
+  }
+  if (type === "decision") {
+    return (
+      lead +
+      (lang === "vi"
+        ? "Điều gì sẽ khác nếu bạn không cần phải quyết định hoàn hảo ngay lần đầu?"
+        : "What would be different if you didn't have to get this decision perfectly right the first time?")
+    );
+  }
+  return (
+    lead +
+    (lang === "vi"
+      ? "Nếu giả định đó không hoàn toàn đúng thì sao?"
+      : "What if that assumption isn't entirely true?")
+  );
+}
+
+function reflectStatement(
+  pattern: PatternKey | null,
+  understandReply: string,
+  challengeReply: string,
+  lang: Lang,
+): string {
+  const start = quoteReply(understandReply);
+  const end = quoteReply(challengeReply);
+  const summary =
+    start && end
+      ? lang === "vi"
+        ? `Bạn bắt đầu với "${start}", và giờ bạn nhận ra "${end}".`
+        : `You started with "${start}", and now you're noticing "${end}".`
+      : lang === "vi"
+        ? "Cảm ơn bạn đã chia sẻ tất cả những điều đó."
+        : "Thank you for sharing all of that.";
+
+  if (!pattern) return summary;
+
+  const hypotheses = (lang === "vi" ? PATTERN_CONTENT_VI : PATTERN_CONTENT_EN)[pattern].hypotheses;
+  if (hypotheses.length === 0) return summary;
+  const patternLine =
+    lang === "vi" ? `Mình để ý thấy một khả năng: ${hypotheses[0]}` : `Here's a pattern I'm noticing: ${hypotheses[0]}`;
+  return `${summary} ${patternLine}`;
+}
+
+function insightStatement(lang: Lang): string {
+  return lang === "vi" ? RECOMMENDATION_VI : RECOMMENDATION_EN;
+}
+
+function actionStatement(type: QueryType, options: [string, string] | null, lang: Lang): string {
+  const steps = actionPlanFor(type, options, lang);
+  const numbered = steps.map((step, i) => `${i + 1}. ${step}`).join("\n");
+  const reflection = lang === "vi" ? REFLECTION_PROMPT_VI : REFLECTION_PROMPT_EN;
+  return `${numbered}\n\n${reflection}`;
+}
+
+export type AuroraPhase =
+  | "understand"
+  | "clarify"
+  | "explore"
+  | "challenge"
+  | "reflect"
+  | "insight"
+  | "action";
+
+export interface AuroraState {
+  /** The phase whose question/statement was just shown to the user. */
+  phase: AuroraPhase;
+  type: QueryType;
+  options: [string, string] | null;
+  pattern: PatternKey | null;
+  understandReply: string;
+  clarifyReply: string;
+  exploreReply: string;
+  challengeReply: string;
+}
+
+export interface AuroraTurn {
+  /** Aurora's message for this turn - may be multi-line for the final action step. */
+  message: string;
+  state: AuroraState;
+  /** True while this message ends in a real question waiting on the user. */
+  awaitingReply: boolean;
+  /** True once the action phase has been shown - the 7 phases are complete. */
+  done: boolean;
+}
+
+/**
+ * Opens the conversation: phase 1, Understand. A short lead-in (the
+ * situation, grounded in a matched pattern or the user's own words) plus one
+ * real question. Never a paragraph, never a hypothesis dump up front.
+ */
+export function beginAurora(problem: string, lang: Lang): AuroraTurn {
+  const trimmed = problem.trim();
+  const type = detectQueryType(trimmed, lang);
+  const options = detectOptions(trimmed, lang);
+  const pattern = detectPattern(trimmed, lang);
+
+  const lead = openingLine(pattern, options, lang);
+  const question = understandQuestion(pattern, options, type, lang);
 
   return {
-    situation: stage.situation,
-    hypotheses: stage.hypotheses,
-    rootCauseQuestion: stage.rootCauseQuestion,
-    framework: stage.framework,
-    optionsDetected: options,
-    type,
+    message: `${lead} ${question}`,
+    state: {
+      phase: "understand",
+      type,
+      options,
+      pattern,
+      understandReply: "",
+      clarifyReply: "",
+      exploreReply: "",
+      challengeReply: "",
+    },
+    awaitingReply: true,
+    done: false,
   };
 }
 
-export function continueConversation(
-  type: QueryType,
-  options: [string, string] | null,
-  context: string,
-  goal: string,
-  rootCauseReply: string,
-  lang: Lang,
-): AuroraFollowUp {
-  const tradeoffs = tradeoffsFor(type, options, context, rootCauseReply, lang);
-  const actionPlan = actionPlanFor(type, options, lang);
-  const reflectionPrompt = lang === "vi" ? REFLECTION_PROMPT_VI : REFLECTION_PROMPT_EN;
+/**
+ * Advances the conversation by one phase, given the user's reply to the
+ * question the current phase just asked. Understand/Clarify/Explore/
+ * Challenge each consume a reply and produce the next question. Reflect and
+ * Insight are statements with no question, so the UI auto-advances through
+ * them without waiting on input - see reachesAction/needsAutoAdvance below.
+ */
+export function advanceAurora(state: AuroraState, reply: string, lang: Lang): AuroraTurn {
+  const trimmed = reply.trim();
+  switch (state.phase) {
+    case "understand": {
+      const nextState: AuroraState = { ...state, understandReply: trimmed, phase: "clarify" };
+      return {
+        message: clarifyQuestion(state.options, trimmed, lang),
+        state: nextState,
+        awaitingReply: true,
+        done: false,
+      };
+    }
+    case "clarify": {
+      const nextState: AuroraState = { ...state, clarifyReply: trimmed, phase: "explore" };
+      return {
+        message: exploreQuestion(state.type, state.options, trimmed, lang),
+        state: nextState,
+        awaitingReply: true,
+        done: false,
+      };
+    }
+    case "explore": {
+      const nextState: AuroraState = { ...state, exploreReply: trimmed, phase: "challenge" };
+      return {
+        message: challengeQuestion(state.type, state.options, trimmed, lang),
+        state: nextState,
+        awaitingReply: true,
+        done: false,
+      };
+    }
+    case "challenge": {
+      const nextState: AuroraState = { ...state, challengeReply: trimmed, phase: "reflect" };
+      return {
+        message: reflectStatement(state.pattern, state.understandReply, trimmed, lang),
+        state: nextState,
+        awaitingReply: false,
+        done: false,
+      };
+    }
+    default:
+      return autoAdvanceAurora(state, lang);
+  }
+}
 
-  const base = lang === "vi" ? RECOMMENDATION_VI : RECOMMENDATION_EN;
-  const goalLine = goal.trim()
-    ? lang === "vi"
-      ? ` Hãy giữ mục tiêu này trong đầu: "${goal.trim()}".`
-      : ` Keep this goal in mind: "${goal.trim()}".`
-    : "";
-  const recommendation = base + goalLine;
-
-  return { tradeoffs, recommendation, actionPlan, reflectionPrompt };
+/**
+ * Advances through the three closing statement-only phases (Reflect ->
+ * Insight -> Action) with no user reply needed - the conversation already
+ * has everything it's going to get, this is Aurora wrapping up out loud in
+ * short beats rather than one long dump.
+ */
+export function autoAdvanceAurora(state: AuroraState, lang: Lang): AuroraTurn {
+  switch (state.phase) {
+    case "reflect": {
+      const nextState: AuroraState = { ...state, phase: "insight" };
+      return { message: insightStatement(lang), state: nextState, awaitingReply: false, done: false };
+    }
+    case "insight": {
+      const nextState: AuroraState = { ...state, phase: "action" };
+      return {
+        message: actionStatement(state.type, state.options, lang),
+        state: nextState,
+        awaitingReply: false,
+        done: true,
+      };
+    }
+    default:
+      return { message: "", state, awaitingReply: false, done: true };
+  }
 }
 
 export function starterPrompts(lang: Lang): string[] {

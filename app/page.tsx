@@ -24,7 +24,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState<Step>("welcome");
   const [name, setName] = useState("");
 
-  // Already onboarded (returning visit) — go straight home.
+  // Already onboarded (returning visit) - go straight home.
   useEffect(() => {
     if (profile.onboarded) router.replace("/home");
   }, [profile.onboarded, router]);

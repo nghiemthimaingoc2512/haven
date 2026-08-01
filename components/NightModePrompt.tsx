@@ -18,7 +18,7 @@ function hasAskedToday(): boolean {
 }
 
 /**
- * Offers Night Mode once per day after 9pm local time — never forces it.
+ * Offers Night Mode once per day after 9pm local time - never forces it.
  * `show` is a pure derived value (period is already SSR-safe via
  * useDayPeriod, and short-circuits before the localStorage read), so there's
  * no effect/setState involved in deciding visibility at all.
@@ -36,7 +36,7 @@ export function NightModePrompt() {
     try {
       window.localStorage.setItem(PROMPT_KEY, new Date().toDateString());
     } catch {
-      // ignore — will just ask again next time
+      // ignore - will just ask again next time
     }
   };
 

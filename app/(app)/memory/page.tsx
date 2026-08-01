@@ -22,7 +22,7 @@ function isToday(iso: string): boolean {
 
 function DiaryEntry({ memory, lang, t }: { memory: Memory; lang: Lang; t: Copy }) {
   return (
-    <div className="haven-surface animate-rise rounded-2xl px-6 py-6">
+    <div id={memory.id} className="haven-surface animate-rise scroll-mt-24 rounded-2xl px-6 py-6">
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs text-muted">{formatDate(memory.createdAt, lang)}</span>
         {memory.emotionKey && (
@@ -41,7 +41,7 @@ function DiaryEntry({ memory, lang, t }: { memory: Memory; lang: Lang; t: Copy }
 }
 
 /**
- * The diary — every reflection Whisper has ever offered back, read as a
+ * The diary - every reflection Whisper has ever offered back, read as a
  * journal. This is distinct from Growing Sky on purpose: Growing Sky is the
  * long-term growth path; this page is for reading what was actually said.
  */

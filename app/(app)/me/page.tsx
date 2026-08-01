@@ -78,7 +78,7 @@ export default function MePage() {
       </div>
 
       <SettingCard label={t.profileLabel}>
-        <p className="mt-2 font-serif text-xl text-ink">{profile.name || "—"}</p>
+        <p className="mt-2 font-serif text-xl text-ink">{profile.name || "-"}</p>
       </SettingCard>
 
       <SettingCard label={t.languageLabel}>

@@ -9,19 +9,19 @@ export type MoonState = "auto" | "awake" | "sleeping";
 interface MoonProps {
   /** Rendered size in px (square). */
   size?: number;
-  /** "auto" (default) follows real local time. Only affects animation timing — never the artwork's appearance. */
+  /** "auto" (default) follows real local time. Only affects animation timing - never the artwork's appearance. */
   state?: MoonState;
-  /** Floating/breathing wrapper animation (position only — translate/scale, never a visual filter). */
+  /** Floating/breathing wrapper animation (position only - translate/scale, never a visual filter). */
   animate?: boolean;
   /** Very subtle wrapper sway, on top of the breathing animation. Used sparingly (hero moments). */
   sway?: boolean;
-  /** Pass through to next/image — set for the single above-the-fold instance per page. */
+  /** Pass through to next/image - set for the single above-the-fold instance per page. */
   priority?: boolean;
   className?: string;
 }
 
 /**
- * Haven's single mascot implementation, per docs/brand/HAVEN_BRAND.md —
+ * Haven's single mascot implementation, per docs/brand/HAVEN_BRAND.md -
  * always renders public/brand/derived/haven-moon.png (derived, via
  * scripts/derive-brand-assets.mjs, from the permanent master at
  * public/brand/master/haven-moon-master.png, which is never redrawn,
@@ -29,14 +29,14 @@ interface MoonProps {
  * one; there is no second mascot implementation anywhere in the codebase.
  *
  * Per HAVEN_BRAND.md's rendering rules: the artwork is rendered exactly as
- * exported — no opacity/blur/brightness/saturation/grayscale/tint/overlay/
+ * exported - no opacity/blur/brightness/saturation/grayscale/tint/overlay/
  * blend-mode/backdrop-filter/glow/halo/drop-shadow. The mascot already
  * contains its own lighting; nothing here may modify its appearance. The
- * wrapper may still move (breathe/sway — position, not appearance), and
+ * wrapper may still move (breathe/sway - position, not appearance), and
  * `state` only changes how fast it moves, never how it looks.
  *
  * If the artwork fails to load (missing asset, network hiccup), this never
- * falls through to a broken-image icon — it shows a simplified vector
+ * falls through to a broken-image icon - it shows a simplified vector
  * placeholder instead, purely as a last-resort "avatar unavailable" state.
  */
 export function Moon({

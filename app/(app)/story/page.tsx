@@ -7,6 +7,7 @@ import { useMemories, type Memory } from "@/lib/storage";
 import { computeStreak } from "@/lib/insights";
 import {
   CONSTELLATION_CATEGORIES,
+  computeConstellationSummaries,
   computePathLayout,
   getCategoryLabel,
   getMemoryCategory,
@@ -14,8 +15,9 @@ import {
   type ConstellationColor,
 } from "@/lib/constellation";
 import { Moon } from "@/components/mascot/Moon";
+import { EmotionBadge } from "@/components/EmotionBadge";
 
-// A filter is only useful once there's real variety to filter between —
+// A filter is only useful once there's real variety to filter between -
 // with one or two categories present it's just confusing chrome.
 const MIN_CATEGORIES_FOR_FILTER = 3;
 
@@ -27,7 +29,7 @@ function nextStarMilestone(count: number): number | null {
 
 const CATEGORY_LIST = Object.keys(CONSTELLATION_CATEGORIES) as ConstellationCategory[];
 
-// Literal class names so Tailwind's static scanner can find them — a
+// Literal class names so Tailwind's static scanner can find them - a
 // template-interpolated `fill-${color}` would never be generated.
 const FILL_CLASS: Record<ConstellationColor, string> = {
   star: "fill-star",
@@ -56,7 +58,23 @@ function formatDate(iso: string, lang: Lang): string {
   });
 }
 
-// Deterministic decorative background stars — ambiance only, never tied to
+function formatDayOnly(iso: string, lang: Lang): string {
+  return new Date(iso).toLocaleDateString(lang === "vi" ? "vi-VN" : "en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+// A real, grounded title for the detail modal - the memory's own detected
+// topic if it has one, otherwise the category it was sorted into. Never a
+// fabricated headline.
+function deriveMemoryTitle(memory: Memory, lang: Lang): string {
+  const topic = memory.topics[0];
+  if (topic) return lang === "vi" ? `Về ${topic}` : `On ${topic}`;
+  return getCategoryLabel(getMemoryCategory(memory), lang);
+}
+
+// Deterministic decorative background stars - ambiance only, never tied to
 // a real memory, so they're clearly distinct from the path itself.
 function backgroundTwinkles(height: number) {
   const count = Math.max(12, Math.round(height / 22));
@@ -88,8 +106,15 @@ export default function StoryPage() {
   const streak = computeStreak(memories);
   const nextMilestone = nextStarMilestone(memories.length);
   const twinkles = useMemo(() => backgroundTwinkles(layout.height), [layout.height]);
+  const summaries = useMemo(() => computeConstellationSummaries(memories), [memories]);
 
-  // Real growth-over-time for whatever category the open memory belongs to —
+  const daysReflected = useMemo(
+    () => new Set(memories.map((m) => new Date(m.createdAt).toDateString())).size,
+    [memories],
+  );
+  const insightsDiscovered = useMemo(() => memories.filter((m) => m.standout).length, [memories]);
+
+  // Real growth-over-time for whatever category the open memory belongs to -
   // count plus the earliest moment in that category, not a fabricated arc.
   const openMemoryGrowth = useMemo(() => {
     if (!openMemory) return null;
@@ -134,7 +159,7 @@ export default function StoryPage() {
               </p>
             )}
 
-            {/* Milestones — real numbers, not fabricated gamification */}
+            {/* Milestones - real numbers, not fabricated gamification */}
             <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-muted">
               <span className="haven-surface rounded-full px-3 py-1.5">
                 ✨ {memories.length} {t.constellationMilestoneStars}
@@ -149,6 +174,16 @@ export default function StoryPage() {
                   🌌 {layout.threads.length} {t.constellationMilestoneThreads}
                 </span>
               )}
+              {daysReflected >= 1 && (
+                <span className="haven-surface rounded-full px-3 py-1.5">
+                  📆 {daysReflected} {t.constellationDaysReflected}
+                </span>
+              )}
+              {insightsDiscovered >= 1 && (
+                <span className="haven-surface rounded-full px-3 py-1.5">
+                  💡 {insightsDiscovered} {t.constellationInsightsDiscovered}
+                </span>
+              )}
               {nextMilestone && (
                 <span className="rounded-full px-3 py-1.5 opacity-60">
                   {nextMilestone - memories.length} {t.constellationNextMilestone} ({nextMilestone} {t.constellationMilestoneStars})
@@ -156,7 +191,42 @@ export default function StoryPage() {
               )}
             </div>
 
-            {/* Category filter — only shown once there's real variety to it; dims the path, never removes it */}
+            {/* Constellation summary cards - one real card per recurring theme (2+ moments), never fabricated */}
+            {summaries.length > 0 && (
+              <div className="mt-6">
+                <p className="text-xs uppercase tracking-wide text-muted">{t.constellationYourConstellations}</p>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {summaries.map((summary) => {
+                    const def = CONSTELLATION_CATEGORIES[summary.category];
+                    return (
+                      <button
+                        key={summary.category}
+                        type="button"
+                        onClick={() => setFilter(summary.category)}
+                        className="haven-surface animate-rise rounded-2xl px-5 py-4 text-left transition-transform hover:-translate-y-0.5"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span aria-hidden="true">{def.icon}</span>
+                          <span className="font-serif text-lg text-ink">{getCategoryLabel(summary.category, lang)}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-muted">
+                          {summary.count} {t.constellationMilestoneStars} · {t.constellationGrowthSince}{" "}
+                          {formatDayOnly(summary.firstDate, lang)}
+                        </p>
+                        {summary.dominantEmotion && (
+                          <div className="mt-2">
+                            <span className="text-xs text-muted">{t.constellationEmotionalTrend}: </span>
+                            <EmotionBadge emotionKey={summary.dominantEmotion} lang={lang} />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Category filter - only shown once there's real variety to it; dims the path, never removes it */}
             {activeCategories.size >= MIN_CATEGORIES_FOR_FILTER && (
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
@@ -183,7 +253,7 @@ export default function StoryPage() {
               </div>
             )}
 
-            {/* Zoom — a real relayout (more or less space between stars), not a CSS trick */}
+            {/* Zoom - a real relayout (more or less space between stars), not a CSS trick */}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
@@ -203,7 +273,7 @@ export default function StoryPage() {
               </button>
             </div>
 
-            {/* The path — one continuous winding journey, tall enough to scroll into */}
+            {/* The path - one continuous winding journey, tall enough to scroll into */}
             <div className="haven-surface animate-rise mt-4 overflow-hidden rounded-3xl px-2 py-6">
               <svg
                 viewBox={`0 0 100 ${layout.height}`}
@@ -233,7 +303,7 @@ export default function StoryPage() {
                   />
                 ))}
 
-                {/* The path itself — glow layer, then a crisp line on top */}
+                {/* The path itself - glow layer, then a crisp line on top */}
                 <path d={layout.pathD} fill="none" className="stroke-secondary" strokeWidth="2.2" opacity="0.25" strokeLinecap="round" />
                 <path d={layout.pathD} fill="none" className="stroke-star" strokeWidth="0.5" opacity="0.85" strokeLinecap="round" />
 
@@ -251,7 +321,7 @@ export default function StoryPage() {
                   {t.constellationNowLabel}
                 </text>
 
-                {/* Waypoint labels — where a new theme begins, read oldest to newest */}
+                {/* Waypoint labels - where a new theme begins, read oldest to newest */}
                 {layout.waypoints.map((w, i) => {
                   const label = `${CONSTELLATION_CATEGORIES[w.category].icon} ${getCategoryLabel(w.category, lang)}`;
                   const dimmed = filter !== "all" && filter !== w.category;
@@ -272,7 +342,7 @@ export default function StoryPage() {
                   );
                 })}
 
-                {/* Stars — one per memory, sitting exactly on the path */}
+                {/* Stars - one per memory, sitting exactly on the path */}
                 {layout.stars.map((star, i) => {
                   const color = CONSTELLATION_CATEGORIES[star.category].color;
                   const dimmed = filter !== "all" && filter !== star.category;
@@ -324,11 +394,20 @@ export default function StoryPage() {
               </button>
             </div>
             <Moon size={36} className="mt-4" />
-            <p className="mt-3 font-serif text-lg leading-relaxed text-ink">
-              {openMemory.reflection}
-            </p>
+            <p className="mt-3 font-serif text-xl text-ink">{deriveMemoryTitle(openMemory, lang)}</p>
+            <p className="mt-2 leading-relaxed text-ink/90">{openMemory.reflection}</p>
             {openMemory.standout && (
               <p className="mt-3 font-serif italic text-secondary">{openMemory.standout}</p>
+            )}
+            {openMemory.emotionKey && (
+              <div className="mt-3">
+                <EmotionBadge
+                  emotionKey={openMemory.emotionKey}
+                  lang={lang}
+                  confidence={openMemory.confidence}
+                  confidenceLabel={t.confidenceLabel}
+                />
+              </div>
             )}
             {openMemoryGrowth && (
               <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
@@ -337,6 +416,12 @@ export default function StoryPage() {
                   : t.constellationGrowthSingle}
               </p>
             )}
+            <Link
+              href={`/memory#${openMemory.id}`}
+              className="mt-4 inline-block text-sm text-primary hover:opacity-70"
+            >
+              {t.constellationViewFull}
+            </Link>
           </div>
         </div>
       )}

@@ -2,17 +2,17 @@
 /**
  * Derives Haven's working brand assets from the permanent master mascot.
  *
- * Reads public/brand/master/haven-moon-master.png (NEVER modified — see
+ * Reads public/brand/master/haven-moon-master.png (NEVER modified - see
  * docs/brand/HAVEN_BRAND.md) and writes:
- *   - public/brand/derived/haven-moon.png — corner-transparent badge, the
+ *   - public/brand/derived/haven-moon.png - corner-transparent badge, the
  *     canonical asset the in-app mascot component renders.
- *   - app/icon.png, app/apple-icon.png, app/opengraph-image.png — Next.js's
+ *   - app/icon.png, app/apple-icon.png, app/opengraph-image.png - Next.js's
  *     static file conventions for favicon / apple touch icon / social
  *     share image, all literal crops/resizes of the same badge.
  *
  * The master is a circular badge (moon + night sky + clouds + stars) inset
  * on a white canvas; this only ever removes the white canvas outside that
- * circle via edge-connected flood fill, or resizes the result — it never
+ * circle via edge-connected flood fill, or resizes the result - it never
  * touches a pixel of the badge itself, so the face, proportions, colors,
  * and personality are untouched, per the brand rules ("Allowed: crop,
  * resize, simplify for small sizes, remove background, export PNG/favicon").
@@ -84,7 +84,7 @@ async function floodCutBackground(inputPath, outputPath) {
 
   const rawAlpha = Buffer.alloc(total);
   for (let i = 0; i < total; i++) rawAlpha[i] = isBackground[i] ? 0 : 255;
-  // toColourspace('b-w') is required here — sharp silently promotes a
+  // toColourspace('b-w') is required here - sharp silently promotes a
   // single-channel raw buffer to 3 channels through .blur() otherwise,
   // which corrupts every alpha read after that via misaligned indexing.
   const alpha = await sharp(rawAlpha, { raw: { width, height, channels: 1 } })
@@ -106,7 +106,7 @@ async function floodCutBackground(inputPath, outputPath) {
   await sharp(rgba, { raw: { width, height, channels: 4 } }).png().toFile(outputPath);
 
   const removed = isBackground.reduce((a, b) => a + b, 0);
-  console.log(`  ${path.basename(outputPath)} — ${width}x${height}, ${removed}/${total} px cut as background`);
+  console.log(`  ${path.basename(outputPath)} - ${width}x${height}, ${removed}/${total} px cut as background`);
 }
 
 const APP_DIR = path.join(ROOT, "app");
@@ -114,12 +114,12 @@ const APP_DIR = path.join(ROOT, "app");
 async function generateFavicons() {
   const badge = sharp(OUTPUT);
 
-  // app/icon.png — favicon. Kept transparent; browsers render the page
+  // app/icon.png - favicon. Kept transparent; browsers render the page
   // background behind it.
   await badge.clone().resize(128, 128).png().toFile(path.join(APP_DIR, "icon.png"));
-  console.log("  app/icon.png — 128x128");
+  console.log("  app/icon.png - 128x128");
 
-  // app/apple-icon.png — iOS flattens onto a solid ground itself, but we
+  // app/apple-icon.png - iOS flattens onto a solid ground itself, but we
   // do it explicitly onto Haven's paper token so there's no black fallback
   // fill on older iOS versions before the OS applies its own mask.
   await badge
@@ -128,9 +128,9 @@ async function generateFavicons() {
     .flatten({ background: "#faf8ff" })
     .png()
     .toFile(path.join(APP_DIR, "apple-icon.png"));
-  console.log("  app/apple-icon.png — 180x180");
+  console.log("  app/apple-icon.png - 180x180");
 
-  // app/opengraph-image.png — 1200x630 share image: gradient background +
+  // app/opengraph-image.png - 1200x630 share image: gradient background +
   // wordmark, composed via SVG, with the real badge composited on top.
   const OG_W = 1200;
   const OG_H = 630;
@@ -155,13 +155,13 @@ async function generateFavicons() {
     .composite([{ input: badgeBuffer, left: Math.round((OG_W - badgeSize) / 2), top: 70 }])
     .png()
     .toFile(path.join(APP_DIR, "opengraph-image.png"));
-  console.log("  app/opengraph-image.png — 1200x630");
+  console.log("  app/opengraph-image.png - 1200x630");
 }
 
 async function main() {
   if (!existsSync(MASTER)) {
     console.error(`Missing master asset: ${MASTER}`);
-    console.error("The master must exist at exactly this path — see docs/brand/HAVEN_BRAND.md.");
+    console.error("The master must exist at exactly this path - see docs/brand/HAVEN_BRAND.md.");
     process.exit(1);
   }
 

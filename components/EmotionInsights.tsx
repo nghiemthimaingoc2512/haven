@@ -22,7 +22,7 @@ interface EmotionInsightsProps {
 }
 
 /**
- * Single shared emotion-tracking dashboard — average mood, streak, an
+ * Single shared emotion-tracking dashboard - average mood, streak, an
  * 8-week trend, and (in full mode) a mood calendar for the current month.
  * Used on Me (full) and Home (compact); Constellation shows per-memory
  * emotion inline on each star instead.
@@ -77,7 +77,7 @@ export function EmotionInsights({ memories, compact = false }: EmotionInsightsPr
                 className={`flex aspect-square items-center justify-center rounded-md text-xs ${
                   cell.emotionKey ? "bg-line" : "bg-line/30"
                 }`}
-                title={`${cell.day}${cell.emotionKey ? ` — ${EMOTION_TAXONOMY[cell.emotionKey].labelEn}` : ""}`}
+                title={`${cell.day}${cell.emotionKey ? ` - ${EMOTION_TAXONOMY[cell.emotionKey].labelEn}` : ""}`}
               >
                 {cell.emotionKey ? EMOTION_TAXONOMY[cell.emotionKey].icon : ""}
               </div>

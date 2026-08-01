@@ -14,8 +14,8 @@ export interface GeneratedReflection {
 
 /**
  * Stands in for the real AI pipeline (see docs/11-product-prd.md §2.3).
- * Everything here is genuine, simple text analysis — word frequency, keyword
- * matching — not a real understanding of what was said. It is deliberately
+ * Everything here is genuine, simple text analysis - word frequency, keyword
+ * matching - not a real understanding of what was said. It is deliberately
  * kept honest about that: confidence and intensity are derived from how many
  * real keyword matches supported the detection, not fabricated numbers.
  */
@@ -55,7 +55,7 @@ const EMOTION_KEY_BY_BUCKET: Record<string, EmotionKey> = {
   amused: "happy",
 };
 
-// Whisper isn't only for heavy disclosure — "I just ate great pho" and
+// Whisper isn't only for heavy disclosure - "I just ate great pho" and
 // "I'm exhausted" both need a real emotional read, but they call for
 // completely different energy in response. Buckets are tagged by register
 // so the composed reply matches: heavy gets held gently, light gets met
@@ -139,7 +139,7 @@ interface KeywordMatch {
   matchedKeywordCount: number;
 }
 
-/** Returns each matching bucket's label plus how many of its own keywords actually matched — the real signal behind confidence/intensity. */
+/** Returns each matching bucket's label plus how many of its own keywords actually matched - the real signal behind confidence/intensity. */
 function matchKeywordsWithStrength(
   text: string,
   table: Array<[string[], string]>,
@@ -153,7 +153,7 @@ function matchKeywordsWithStrength(
   return matches;
 }
 
-// Heavy shares get held gently — the original "I've listened, thank you for
+// Heavy shares get held gently - the original "I've listened, thank you for
 // trusting me" register. This is the wrong register for a food photo.
 const HEAVY_LINES_VI: Record<string, string> = {
   "kiệt sức": "Có vẻ như hôm nay là một ngày nặng nề, và bạn đã một mình gánh khá nhiều thứ.",
@@ -176,7 +176,7 @@ const LISTENED_PREFIX_EN = "I've been listening. I heard everything.";
 const CLOSING_VI = "Cảm ơn bạn đã tin tưởng chia sẻ điều này.";
 const CLOSING_EN = "Thank you for trusting me with this.";
 
-// Light shares get met with actual excitement — a friend reacting, not a
+// Light shares get met with actual excitement - a friend reacting, not a
 // therapist closing a session. No "thank you for trusting me" here.
 const LIGHT_OPENERS_VI: Record<string, string> = {
   "nhẹ nhõm": "Nhẹ cả người luôn ha.",
@@ -188,7 +188,7 @@ const LIGHT_OPENERS_VI: Record<string, string> = {
 const LIGHT_OPENERS_EN: Record<string, string> = {
   relieved: "Aw, that's such a relief.",
   happy: "Ooh, I love that!",
-  proud: "Wait, that's huge — congrats!",
+  proud: "Wait, that's huge - congrats!",
   amused: "Haha, no way!",
 };
 
@@ -252,7 +252,126 @@ export function generateReflection(transcript: string, lang: Lang): GeneratedRef
   return { reflection, standout, emotion, emotionKey, intensity, confidence, topics, people };
 }
 
-/** Human, non-technical invitations to start talking — never "type something." */
+export interface WhisperTurnReply {
+  message: string;
+}
+
+// Deterministic variety, not randomness - the same message always produces
+// the same pick, but different messages land on different lines from a
+// bank. This is what keeps Whisper from reading as a script recited in a
+// fixed order (the exact "interview style" this engine replaces).
+function hashString(s: string): number {
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = (h * 33) ^ s.charCodeAt(i);
+  return h >>> 0;
+}
+
+function pickVariant<T>(bank: T[], seed: string): T {
+  return bank[hashString(seed) % bank.length];
+}
+
+const NEUTRAL_LINES_VI = ["Mm, mình đang nghe đây.", "Mình vẫn ở đây.", "Ừm, mình nghe rồi."];
+const NEUTRAL_LINES_EN = ["Mm, I'm here.", "I'm still with you.", "Okay, I hear you."];
+
+// Real theme-noticing: fires only once, the exact turn a topic crosses from
+// one mention to two - an actual recurrence, never a fabricated pattern.
+const THEME_NOTICE_VI = (topic: string) => `Bạn nhắc đến "${topic}" vài lần rồi.`;
+const THEME_NOTICE_EN = (topic: string) => `You've mentioned "${topic}" a few times now.`;
+
+// Grounded responses only ever reference a real word pulled straight from
+// what the user just wrote - never a generic script. Roughly half are
+// observations with no question mark at all, on purpose: not every turn
+// needs to ask something to help the user keep going.
+const GROUNDED_VI = (word: string) => [
+  `Điều gì về "${word}" đang ở lại với bạn nhiều nhất?`,
+  `Nghe như "${word}" đang chiếm khá nhiều chỗ trong đầu bạn lúc này.`,
+  `"${word}" - mình tò mò bạn còn nghĩ gì thêm về điều đó không.`,
+  `Có gì đó về "${word}" nghe quan trọng.`,
+];
+const GROUNDED_EN = (word: string) => [
+  `What about "${word}" is staying with you the most?`,
+  `Sounds like "${word}" is taking up a lot of space right now.`,
+  `"${word}" - I'm curious what else is there.`,
+  `Something about "${word}" sounds like it matters.`,
+];
+
+// A real anchor word for this one message - the longest non-stopword token,
+// even if it only appears once. Different from findStandoutWord (which
+// needs repetition across a whole transcript): a single short chat message
+// rarely repeats a word, so grounding needs a lighter-weight real signal.
+function pickAnchorWord(text: string, lang: Lang): string | null {
+  const stopwords = lang === "vi" ? STOPWORDS_VI : STOPWORDS_EN;
+  const tokens = tokenize(text).filter((w) => w.length >= 3 && !stopwords.has(w));
+  if (tokens.length === 0) return null;
+  return tokens.reduce((longest, w) => (w.length > longest.length ? w : longest), tokens[0]);
+}
+
+/**
+ * A single Whisper turn, mid-conversation. Priority order, matching the
+ * product's own priority list: reflect the real emotional register first,
+ * then - only if there's real signal for it - notice a recurring theme
+ * across the whole conversation so far, or ground one gentle
+ * observation/question in a real word from the message just sent. When
+ * neither fires, Whisper simply reflects and stays quiet: strategic
+ * silence, not a forced question. Nothing here is a fixed bank walked in a
+ * set order - every part is recomputed from what was actually just said, so
+ * a new topic is followed instead of redirected back to an earlier one.
+ */
+export function getWhisperTurnReply(userMessages: string[], lang: Lang): WhisperTurnReply {
+  const latestMessage = userMessages[userMessages.length - 1] ?? "";
+
+  const emotionMatches = matchKeywordsWithStrength(
+    latestMessage,
+    lang === "vi" ? EMOTION_KEYWORDS_VI : EMOTION_KEYWORDS_EN,
+  ).sort((a, b) => b.matchedKeywordCount - a.matchedKeywordCount);
+
+  const topMatch = emotionMatches[0] ?? null;
+  const register: "heavy" | "light" | "neutral" = topMatch
+    ? (HEAVY_BUCKETS.has(topMatch.label) ? "heavy" : "light")
+    : "neutral";
+
+  let reflectionLine: string;
+  if (register === "heavy" && topMatch) {
+    reflectionLine = (lang === "vi" ? HEAVY_LINES_VI : HEAVY_LINES_EN)[topMatch.label];
+  } else if (register === "light" && topMatch) {
+    reflectionLine = (lang === "vi" ? LIGHT_OPENERS_VI : LIGHT_OPENERS_EN)[topMatch.label];
+  } else {
+    reflectionLine = pickVariant(lang === "vi" ? NEUTRAL_LINES_VI : NEUTRAL_LINES_EN, latestMessage);
+  }
+
+  // Real recurrence across the whole conversation so far - a topic that has
+  // now been mentioned in exactly two different messages, not one.
+  const topicTable = lang === "vi" ? TOPIC_KEYWORDS_VI : TOPIC_KEYWORDS_EN;
+  const topicCounts = new Map<string, number>();
+  for (const msg of userMessages) {
+    const topicsInMsg = new Set(matchKeywordsWithStrength(msg, topicTable).map((m) => m.label));
+    for (const topic of topicsInMsg) topicCounts.set(topic, (topicCounts.get(topic) ?? 0) + 1);
+  }
+  const latestTopics = new Set(matchKeywordsWithStrength(latestMessage, topicTable).map((m) => m.label));
+  let recurringTopic: string | null = null;
+  for (const topic of latestTopics) {
+    if (topicCounts.get(topic) === 2) {
+      recurringTopic = topic;
+      break;
+    }
+  }
+
+  if (recurringTopic) {
+    const notice = (lang === "vi" ? THEME_NOTICE_VI : THEME_NOTICE_EN)(recurringTopic);
+    return { message: `${reflectionLine} ${notice}` };
+  }
+
+  const anchor = pickAnchorWord(latestMessage, lang);
+  if (anchor) {
+    const bank = (lang === "vi" ? GROUNDED_VI : GROUNDED_EN)(anchor);
+    const grounded = pickVariant(bank, latestMessage);
+    return { message: `${reflectionLine} ${grounded}` };
+  }
+
+  return { message: reflectionLine };
+}
+
+/** Human, non-technical invitations to start talking - never "type something." */
 export function talkStarterPrompts(lang: Lang): string[] {
   return lang === "vi"
     ? [

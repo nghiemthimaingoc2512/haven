@@ -23,7 +23,7 @@ function getPeriodSnapshot(): DayPeriod {
 }
 
 function getServerPeriodSnapshot(): DayPeriod {
-  // Neutral, deterministic default for SSR/first paint — the server can't
+  // Neutral, deterministic default for SSR/first paint - the server can't
   // know the visitor's local time. Corrected immediately after mount.
   return "morning";
 }
@@ -55,7 +55,7 @@ export interface WeeklySummary {
   dominantEmotion: EmotionKey | null;
 }
 
-/** Real, derived summary of the last 7 days — not fabricated. */
+/** Real, derived summary of the last 7 days - not fabricated. */
 export function getWeeklySummary(memories: Memory[]): WeeklySummary {
   const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const thisWeek = memories.filter((m) => new Date(m.createdAt).getTime() >= weekAgo);
@@ -82,7 +82,7 @@ export interface MoodCalendarDay {
   emotionKey: EmotionKey | null;
 }
 
-/** One cell per day of the given month — the day's first-logged emotion, or null if nothing was saved that day. */
+/** One cell per day of the given month - the day's first-logged emotion, or null if nothing was saved that day. */
 export function getMoodCalendar(memories: Memory[], monthDate: Date = new Date()): MoodCalendarDay[] {
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -108,7 +108,7 @@ export interface MoodTrendWeek {
   count: number;
 }
 
-/** Average mood valence per week, oldest to newest — the data behind a trend graph. */
+/** Average mood valence per week, oldest to newest - the data behind a trend graph. */
 export function getMoodTrend(memories: Memory[], weeks = 8): MoodTrendWeek[] {
   const now = Date.now();
   const weekMs = 7 * 24 * 60 * 60 * 1000;
@@ -141,7 +141,7 @@ export function getAverageMood(memories: Memory[], days = 30): number | null {
 }
 
 /**
- * A greeting derived from the actual last conversation — never a random
+ * A greeting derived from the actual last conversation - never a random
  * pick. Returns null when there's no meaningful callback to make (no
  * memories yet, or the gap since last time is too ordinary to remark on),
  * in which case the caller falls back to the plain time-of-day greeting.
@@ -170,7 +170,7 @@ export function getWhisperGreeting(memories: Memory[], lang: Lang): string | nul
   return null;
 }
 
-/** A friendly icon + label for a valence score — never the raw number, which would read as clinical. */
+/** A friendly icon + label for a valence score - never the raw number, which would read as clinical. */
 export function describeValence(avg: number | null, lang: Lang): { icon: string; label: string } {
   if (avg === null) return { icon: "🤍", label: lang === "vi" ? "Chưa có dữ liệu" : "Not enough data yet" };
   if (avg >= 1.2) return { icon: "✨", label: lang === "vi" ? "Rất tích cực" : "Very positive" };

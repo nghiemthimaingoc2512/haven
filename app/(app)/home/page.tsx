@@ -42,7 +42,7 @@ export default function HomePage() {
     night: t.homeGreetingNight,
   }[period];
 
-  // A real callback to the last conversation when there's one worth making —
+  // A real callback to the last conversation when there's one worth making -
   // never a random line. Falls back to the plain time-of-day greeting below.
   const whisperGreeting = getWhisperGreeting(memories, lang);
 
@@ -143,7 +143,7 @@ export default function HomePage() {
         ) : (
           <>
             {/* Today's Tide */}
-            {/* Memory from previous days — a real callback, not a widget */}
+            {/* Memory from previous days - a real callback, not a widget */}
             {latest ? (
               <Link
                 href="/memory"
@@ -200,7 +200,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* The other world — reachable, but never competing with the conversation above */}
+            {/* The other world - reachable, but never competing with the conversation above */}
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
               <Link
                 href="/talk"
@@ -218,7 +218,7 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Universe Preview — a short stretch of the same winding path, not scattered dots */}
+            {/* Universe Preview - a short stretch of the same winding path, not scattered dots */}
             {previewTrail.length > 0 && (
               <Link
                 href="/story"

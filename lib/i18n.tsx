@@ -25,6 +25,7 @@ export interface Copy {
   startTalking: string;
   talkPlaceholder: string;
   finishReflection: string;
+  talkTyping: string;
   cancel: string;
   send: string;
   switchToTyping: string;
@@ -110,25 +111,10 @@ export interface Copy {
   savedToJourney: string;
   auroraIntro: string;
   auroraPlaceholder: string;
-  auroraSend: string;
-  auroraProblemLabel: string;
-  auroraContextLabel: string;
-  auroraContextPlaceholder: string;
-  auroraGoalLabel: string;
-  auroraGoalPlaceholder: string;
-  auroraSituationLabel: string;
-  auroraHypothesesLabel: string;
-  auroraFrameworkLabel: string;
-  auroraOptionsLabel: string;
-  auroraTradeoffsLabel: string;
-  auroraRecommendationLabel: string;
-  auroraActionPlanLabel: string;
-  auroraReflectionLabel: string;
+  auroraTyping: string;
   auroraNewQuestion: string;
   auroraTryPrompt: string;
   auroraReplyPlaceholder: string;
-  auroraYourReplyLabel: string;
-  auroraContinue: string;
   auroraSkip: string;
   constellationEmpty: string;
   constellationFilterAll: string;
@@ -184,6 +170,11 @@ export interface Copy {
   constellationMilestoneThreads: string;
   constellationNextMilestone: string;
   constellationBeginCta: string;
+  constellationDaysReflected: string;
+  constellationInsightsDiscovered: string;
+  constellationYourConstellations: string;
+  constellationEmotionalTrend: string;
+  constellationViewFull: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -193,10 +184,11 @@ const dictionary: Record<Lang, Copy> = {
     welcomeBody:
       "Không phải bác sĩ tâm lý. Haven là hai người bạn: Thì thầm lắng nghe chuyện mỗi ngày của bạn, Cực quang giúp bạn suy nghĩ rõ ràng hơn khi cần quyết định. Cả hai luôn ở đây, không bao giờ thấy phiền vì bạn.",
     welcomeCrisis:
-      "Nếu bạn đang trong khủng hoảng, đây không phải là nơi phù hợp — hãy liên hệ đường dây nóng hỗ trợ tâm lý hoặc số cấp cứu tại nơi bạn sống. Còn nếu không, mình ở đây, và sẽ không đi đâu cả.",
+      "Nếu bạn đang trong khủng hoảng, đây không phải là nơi phù hợp - hãy liên hệ đường dây nóng hỗ trợ tâm lý hoặc số cấp cứu tại nơi bạn sống. Còn nếu không, mình ở đây, và sẽ không đi đâu cả.",
     startTalking: "Bắt đầu nói",
-    talkPlaceholder: "Kể cho mình nghe hôm nay của bạn thế nào — chuyện gì cũng được.",
-    finishReflection: "Xong",
+    talkPlaceholder: "Kể cho mình nghe hôm nay của bạn thế nào - chuyện gì cũng được.",
+    finishReflection: "Kết thúc trò chuyện",
+    talkTyping: "Thì thầm đang gõ...",
     cancel: "Hủy",
     send: "Gửi",
     switchToTyping: "Chuyển sang gõ chữ",
@@ -206,11 +198,11 @@ const dictionary: Record<Lang, Copy> = {
     openInBrowser: "Mở trong trình duyệt",
     statusIdle: "Mình ở đây.",
     statusListening: "Đang lắng nghe…",
-    statusPaused: "Tạm dừng một chút — chạm khi bạn sẵn sàng.",
+    statusPaused: "Tạm dừng một chút - chạm khi bạn sẵn sàng.",
     statusPermissionDenied:
-      "Micro chưa được cho phép ở đây. Nếu bạn đang xem bản xem trước nhúng, hãy mở Haven trong một tab trình duyệt thật để dùng giọng nói — hoặc kiểm tra quyền micro trong cài đặt trình duyệt. Bạn vẫn có thể gõ chữ.",
+      "Micro chưa được cho phép ở đây. Nếu bạn đang xem bản xem trước nhúng, hãy mở Haven trong một tab trình duyệt thật để dùng giọng nói - hoặc kiểm tra quyền micro trong cài đặt trình duyệt. Bạn vẫn có thể gõ chữ.",
     statusNetworkError:
-      "Có sự cố kết nối — chạm để thử lại, hoặc tiếp tục viết.",
+      "Có sự cố kết nối - chạm để thử lại, hoặc tiếp tục viết.",
     statusUnsupported: "Trình duyệt này chưa hỗ trợ giọng nói. Hãy gõ thay.",
     processingListening: "Thì thầm đang lắng nghe…",
     processingReflecting: "Đang suy ngẫm…",
@@ -247,7 +239,7 @@ const dictionary: Record<Lang, Copy> = {
     navLanguageLabel: "Đổi ngôn ngữ",
     navThemeLabel: "Đổi giao diện",
     navAboutLabel: "Giới thiệu Haven",
-    navAboutBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
+    navAboutBody: "Đây là bản dùng thử - chưa có kênh hỗ trợ chính thức.",
     homeGreetingMorning: "Chào buổi sáng",
     homeGreetingAfternoon: "Chào buổi chiều",
     homeGreetingEvening: "Chào buổi tối",
@@ -255,7 +247,7 @@ const dictionary: Record<Lang, Copy> = {
     homeQuickTalk: "Bắt đầu nói",
     homeQuickWrite: "Viết ra",
     homeRecentMemoryLabel: "Một điều mình còn nhớ",
-    homeNoMemoryYet: "Chưa có điều gì để nhớ lại — hãy bắt đầu cuộc trò chuyện đầu tiên.",
+    homeNoMemoryYet: "Chưa có điều gì để nhớ lại - hãy bắt đầu cuộc trò chuyện đầu tiên.",
     comingSoon: "Sắp có.",
     themeLabel: "Giao diện",
     themeLight: "Sáng",
@@ -284,24 +276,9 @@ const dictionary: Record<Lang, Copy> = {
     savedToJourney: "Đã lưu vào hành trình cảm xúc của bạn.",
     auroraIntro: "Mình ở đây để cùng bạn suy nghĩ.",
     auroraPlaceholder: "Bạn đang phân vân điều gì?",
-    auroraSend: "Cùng nghĩ nhé",
+    auroraTyping: "Aurora đang gõ...",
     auroraReplyPlaceholder: "Bạn nghĩ sao?",
-    auroraYourReplyLabel: "Bạn đã nói",
-    auroraContinue: "Tiếp tục",
     auroraSkip: "Bỏ qua, cứ tiếp tục",
-    auroraProblemLabel: "Vấn đề",
-    auroraContextLabel: "Bối cảnh (không bắt buộc)",
-    auroraContextPlaceholder: "Có gì phía sau chuyện này mà đáng để biết không?",
-    auroraGoalLabel: "Mục tiêu (không bắt buộc)",
-    auroraGoalPlaceholder: "Một kết quả tốt sẽ trông như thế nào?",
-    auroraSituationLabel: "Tình huống",
-    auroraHypothesesLabel: "Vài giả thuyết đáng cân nhắc",
-    auroraFrameworkLabel: "Cách tiếp cận",
-    auroraOptionsLabel: "Các lựa chọn",
-    auroraTradeoffsLabel: "Đánh đổi cần cân nhắc",
-    auroraRecommendationLabel: "Đây là điều mình thấy",
-    auroraActionPlanLabel: "Kế hoạch hành động",
-    auroraReflectionLabel: "Để suy ngẫm thêm",
     auroraNewQuestion: "Hỏi điều khác",
     auroraTryPrompt: "Hoặc thử một trong số này:",
     constellationEmpty: "Bầu trời vẫn còn trống. Mỗi cuộc trò chuyện sẽ trở thành một ngôi sao.",
@@ -321,7 +298,7 @@ const dictionary: Record<Lang, Copy> = {
     meAiMemory: "Điều mình nhớ về bạn",
     meAiMemoryBody: "Thì thầm ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Bầu trời trưởng thành.",
     mePrivacy: "Quyền riêng tư",
-    mePrivacyBody: "Mọi dữ liệu hiện được lưu trực tiếp trên thiết bị của bạn — không có máy chủ, không chia sẻ với bên thứ ba.",
+    mePrivacyBody: "Mọi dữ liệu hiện được lưu trực tiếp trên thiết bị của bạn - không có máy chủ, không chia sẻ với bên thứ ba.",
     meExport: "Xuất dữ liệu",
     meExportDone: "Đã tải xuống.",
     meDeleteData: "Xoá toàn bộ dữ liệu",
@@ -330,8 +307,8 @@ const dictionary: Record<Lang, Copy> = {
     meAbout: "Về Haven",
     meVersion: "Phiên bản",
     meSupport: "Hỗ trợ",
-    meSupportBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
-    carryAloneLine: "Chuyện gì cũng được — vui, buồn, hay chỉ một khoảnh khắc nhỏ trong ngày.",
+    meSupportBody: "Đây là bản dùng thử - chưa có kênh hỗ trợ chính thức.",
+    carryAloneLine: "Chuyện gì cũng được - vui, buồn, hay chỉ một khoảnh khắc nhỏ trong ngày.",
     breatheTogetherLine: "Hãy cùng thở nhé.",
     emotionInsightsTitle: "Hành trình cảm xúc",
     emotionAverageMood: "Tâm trạng trung bình (30 ngày)",
@@ -358,6 +335,11 @@ const dictionary: Record<Lang, Copy> = {
     constellationMilestoneThreads: "chòm sao đã hình thành",
     constellationNextMilestone: "cuộc trò chuyện nữa đến mốc tiếp theo",
     constellationBeginCta: "Bắt đầu cuộc trò chuyện đầu tiên",
+    constellationDaysReflected: "ngày đã suy ngẫm",
+    constellationInsightsDiscovered: "điều nổi bật đã khám phá",
+    constellationYourConstellations: "Các chòm sao của bạn",
+    constellationEmotionalTrend: "Xu hướng cảm xúc",
+    constellationViewFull: "Xem toàn bộ cuộc trò chuyện",
   },
   en: {
     brand: "Haven",
@@ -365,10 +347,11 @@ const dictionary: Record<Lang, Copy> = {
     welcomeBody:
       "Not a therapist. Haven is two companions: Whisper listens to your everyday, Aurora helps you think clearly when you need to decide. Both are always here, and neither will get tired of you.",
     welcomeCrisis:
-      "If you're in crisis, this isn't the right place — please contact a crisis line (988 in the US) or emergency services instead. Otherwise, I'm here, and I'm not going anywhere.",
+      "If you're in crisis, this isn't the right place - please contact a crisis line (988 in the US) or emergency services instead. Otherwise, I'm here, and I'm not going anywhere.",
     startTalking: "Start talking",
-    talkPlaceholder: "Tell me about your day — anything at all.",
-    finishReflection: "Done",
+    talkPlaceholder: "Tell me about your day - anything at all.",
+    finishReflection: "End conversation",
+    talkTyping: "Whisper is typing...",
     cancel: "Cancel",
     send: "Send",
     switchToTyping: "Switch to typing",
@@ -378,11 +361,11 @@ const dictionary: Record<Lang, Copy> = {
     openInBrowser: "Open in browser",
     statusIdle: "I'm here.",
     statusListening: "Listening…",
-    statusPaused: "Paused for a moment — tap whenever you're ready.",
+    statusPaused: "Paused for a moment - tap whenever you're ready.",
     statusPermissionDenied:
-      "Microphone isn't enabled here. If you're viewing an embedded preview, open Haven in a real browser tab to use voice — or check your microphone permission in browser settings. You can still type.",
+      "Microphone isn't enabled here. If you're viewing an embedded preview, open Haven in a real browser tab to use voice - or check your microphone permission in browser settings. You can still type.",
     statusNetworkError:
-      "Connection trouble — tap to try again, or keep writing.",
+      "Connection trouble - tap to try again, or keep writing.",
     statusUnsupported:
       "Voice isn't available in this browser. Type instead.",
     processingListening: "Whisper is listening…",
@@ -420,7 +403,7 @@ const dictionary: Record<Lang, Copy> = {
     navLanguageLabel: "Change language",
     navThemeLabel: "Change appearance",
     navAboutLabel: "About Haven",
-    navAboutBody: "This is a prototype — there's no official support channel yet.",
+    navAboutBody: "This is a prototype - there's no official support channel yet.",
     homeGreetingMorning: "Good morning",
     homeGreetingAfternoon: "Good afternoon",
     homeGreetingEvening: "Good evening",
@@ -428,7 +411,7 @@ const dictionary: Record<Lang, Copy> = {
     homeQuickTalk: "Start talking",
     homeQuickWrite: "Write",
     homeRecentMemoryLabel: "Something I still remember",
-    homeNoMemoryYet: "Nothing to remember yet — start your first conversation.",
+    homeNoMemoryYet: "Nothing to remember yet - start your first conversation.",
     comingSoon: "Coming soon.",
     themeLabel: "Appearance",
     themeLight: "Light",
@@ -457,24 +440,9 @@ const dictionary: Record<Lang, Copy> = {
     savedToJourney: "Saved to your emotional journey.",
     auroraIntro: "I'm here to think alongside you.",
     auroraPlaceholder: "What are you weighing right now?",
-    auroraSend: "Let's think together",
+    auroraTyping: "Aurora is typing...",
     auroraReplyPlaceholder: "What do you think?",
-    auroraYourReplyLabel: "You said",
-    auroraContinue: "Continue",
     auroraSkip: "Skip, just continue",
-    auroraProblemLabel: "Problem",
-    auroraContextLabel: "Context (optional)",
-    auroraContextPlaceholder: "Any background that matters here?",
-    auroraGoalLabel: "Goal (optional)",
-    auroraGoalPlaceholder: "What would a good outcome look like?",
-    auroraSituationLabel: "Situation",
-    auroraHypothesesLabel: "A few hypotheses worth testing",
-    auroraFrameworkLabel: "Approach",
-    auroraOptionsLabel: "Options",
-    auroraTradeoffsLabel: "Trade-offs to weigh",
-    auroraRecommendationLabel: "Here's what I see",
-    auroraActionPlanLabel: "Action plan",
-    auroraReflectionLabel: "Worth reflecting on",
     auroraNewQuestion: "Ask something else",
     auroraTryPrompt: "Or try one of these:",
     constellationEmpty: "The sky is still empty. Every conversation becomes a star.",
@@ -494,7 +462,7 @@ const dictionary: Record<Lang, Copy> = {
     meAiMemory: "What I remember about you",
     meAiMemoryBody: "Whisper remembers what you share to understand you better over time. You can view or delete anything anytime in Growing Sky.",
     mePrivacy: "Privacy",
-    mePrivacyBody: "Everything is currently stored directly on your device — no server, nothing shared with third parties.",
+    mePrivacyBody: "Everything is currently stored directly on your device - no server, nothing shared with third parties.",
     meExport: "Export data",
     meExportDone: "Downloaded.",
     meDeleteData: "Delete all data",
@@ -503,8 +471,8 @@ const dictionary: Record<Lang, Copy> = {
     meAbout: "About Haven",
     meVersion: "Version",
     meSupport: "Support",
-    meSupportBody: "This is a prototype — there's no official support channel yet.",
-    carryAloneLine: "Anything goes — happy, sad, or just a small moment from your day.",
+    meSupportBody: "This is a prototype - there's no official support channel yet.",
+    carryAloneLine: "Anything goes - happy, sad, or just a small moment from your day.",
     breatheTogetherLine: "Let's breathe together.",
     emotionInsightsTitle: "Emotional Journey",
     emotionAverageMood: "Average mood (30 days)",
@@ -531,6 +499,11 @@ const dictionary: Record<Lang, Copy> = {
     constellationMilestoneThreads: "constellations formed",
     constellationNextMilestone: "more conversations to your next milestone",
     constellationBeginCta: "Begin your first conversation",
+    constellationDaysReflected: "days reflected",
+    constellationInsightsDiscovered: "insights discovered",
+    constellationYourConstellations: "Your constellations",
+    constellationEmotionalTrend: "Emotional trend",
+    constellationViewFull: "View full conversation",
   },
 };
 
@@ -556,7 +529,7 @@ function readStoredLang(): Lang {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (stored === "vi" || stored === "en") return stored;
   } catch {
-    // localStorage unavailable — fall through to the default
+    // localStorage unavailable - fall through to the default
   }
   return "vi";
 }
@@ -598,7 +571,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(STORAGE_KEY, next);
     } catch {
-      // ignore — preference just won't persist this session
+      // ignore - preference just won't persist this session
     }
   }, []);
 

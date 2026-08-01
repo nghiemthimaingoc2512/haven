@@ -54,7 +54,7 @@ export function saveMemory(memory: Memory): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
   } catch {
-    // storage full or unavailable — nothing recoverable to do here
+    // storage full or unavailable - nothing recoverable to do here
   }
 }
 
@@ -72,7 +72,7 @@ export function createMemoryId(): string {
 // changes written from another tab. useSyncExternalStore is the correct
 // primitive for "read a value that lives outside React." The snapshot is
 // cached by the raw string so unchanged storage returns the same array
-// reference — required for useSyncExternalStore to avoid re-render loops.
+// reference - required for useSyncExternalStore to avoid re-render loops.
 
 let cachedRaw: string | null | undefined = undefined;
 let cachedParsed: Memory[] = [];
@@ -98,7 +98,7 @@ function getMemoriesSnapshot(): Memory[] {
 const EMPTY_MEMORIES: Memory[] = [];
 
 function getServerMemoriesSnapshot(): Memory[] {
-  // must return the same reference every call — a fresh [] here breaks
+  // must return the same reference every call - a fresh [] here breaks
   // useSyncExternalStore's equality check and loops
   return EMPTY_MEMORIES;
 }
@@ -108,7 +108,7 @@ function subscribeToMemories(callback: () => void): () => void {
   return () => window.removeEventListener("storage", callback);
 }
 
-/** Reactive list of saved memories, newest first — updates if another tab writes to storage. */
+/** Reactive list of saved memories, newest first - updates if another tab writes to storage. */
 export function useMemories(): Memory[] {
   return useSyncExternalStore(
     subscribeToMemories,

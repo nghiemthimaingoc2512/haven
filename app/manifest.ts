@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Haven — Somewhere to go",
+    name: "Haven - Somewhere to go",
     short_name: "Haven",
     description:
       "A place to say the thing you haven't said yet, and be understood, not managed.",

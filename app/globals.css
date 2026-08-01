@@ -17,9 +17,9 @@
   --star: #ffe9a8;
   --signal: #e0607a;
   --muted: #8b85a3;
-  /* Constant across light/dark/night — the mascot's glow ring after 9pm. */
+  /* Constant across light/dark/night - the mascot's glow ring after 9pm. */
   --night-glow: #6d5bd0;
-  /* Constant across light/dark/night — the mascot's face needs to read
+  /* Constant across light/dark/night - the mascot's face needs to read
      against its own lavender gradient regardless of site theme. */
   --moon-face: #352a5c;
   color-scheme: light;
@@ -48,7 +48,7 @@
 }
 
 /* Manual theme override (onboarding + Me > Theme). Wins over the OS
-   preference in both directions — see the inline pre-hydration script in
+   preference in both directions - see the inline pre-hydration script in
    app/layout.tsx. */
 :root[data-theme="dark"] {
   --ink: #f1eeff;
@@ -212,7 +212,7 @@ a {
   }
 }
 
-/* Mascot wrapper only — never applied to the artwork itself. */
+/* Mascot wrapper only - never applied to the artwork itself. */
 @keyframes haven-mascot-breathe {
   0%,
   100% {
@@ -279,7 +279,7 @@ a {
     animation: haven-mascot-sway 7s ease-in-out infinite;
   }
 
-  /* Night Mode moves slower than the daytime app — everything quieter. */
+  /* Night Mode moves slower than the daytime app - everything quieter. */
   .animate-float-slow {
     animation: haven-float 10s ease-in-out infinite;
   }
@@ -299,7 +299,7 @@ a {
     0 0 36px 10px color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
-/* Floating / glass surface — glassmorphism with real glow, not just a border. */
+/* Floating / glass surface - glassmorphism with real glow, not just a border. */
 .haven-surface {
   background: color-mix(in srgb, var(--card) 88%, var(--moon-glow) 12%);
   border: 1px solid var(--line);
@@ -322,7 +322,7 @@ a {
   linear-gradient(180deg, var(--paper), var(--paper) 60%, color-mix(in srgb, var(--soft-blue) 25%, var(--paper)));
 }
 
-/* Deep night-sky wash — Night Indigo + stars, used after 9pm and in Night Mode UI. */
+/* Deep night-sky wash - Night Indigo + stars, used after 9pm and in Night Mode UI. */
 .haven-night-sky {
   background: radial-gradient(
     ellipse 130% 90% at 50% -20%,
@@ -332,7 +332,7 @@ a {
   linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--night-indigo) 35%, var(--paper)));
 }
 
-/* Brighter, livelier wash for Aurora — an advisor space, not a listening one. */
+/* Brighter, livelier wash for Aurora - an advisor space, not a listening one. */
 .haven-aurora {
   background: radial-gradient(
     ellipse 140% 90% at 20% -10%,
@@ -347,7 +347,7 @@ a {
   linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--secondary) 18%, var(--paper)));
 }
 
-/* Shared "alive" CTA treatment — gentle lift + glow on hover, soft press. */
+/* Shared "alive" CTA treatment - gentle lift + glow on hover, soft press. */
 .haven-cta {
   transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }

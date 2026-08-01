@@ -1,7 +1,7 @@
 const BAR_COUNT = 5;
 
 /**
- * A calm, decorative "listening" indicator — not driven by real microphone
+ * A calm, decorative "listening" indicator - not driven by real microphone
  * amplitude. Wiring up true audio analysis (Web Audio API + AnalyserNode) is
  * a meaningfully larger undertaking than this stage of the product needs;
  * what matters here is the felt sense of being listened to, not literal

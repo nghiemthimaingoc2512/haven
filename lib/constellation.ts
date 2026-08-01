@@ -39,7 +39,7 @@ export const CONSTELLATION_CATEGORIES: Record<ConstellationCategory, CategoryDef
 };
 
 // Real life-topic signal (from lib/reflection.ts's keyword detection) maps
-// straight to a category. Not every topic has an obvious category — those
+// straight to a category. Not every topic has an obvious category - those
 // fall through to the emotion-based check below.
 const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
   "công việc": "career",
@@ -57,7 +57,7 @@ const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
 };
 
 // When the topic doesn't resolve to a category, fall back to the memory's
-// own detected emotion — also real signal, never fabricated.
+// own detected emotion - also real signal, never fabricated.
 const STRESS_EMOTIONS = new Set<EmotionKey>(["anxious", "worried", "frustrated", "overwhelmed", "angry"]);
 const JOY_EMOTIONS = new Set<EmotionKey>(["happy", "hopeful", "inspired", "peaceful", "calm"]);
 
@@ -81,7 +81,7 @@ export function getCategoryLabel(category: ConstellationCategory, lang: Lang): s
 
 // --- Path layout ---------------------------------------------------------
 //
-// The Universe is one continuous, winding path through the sky — not a
+// The Universe is one continuous, winding path through the sky - not a
 // scatter of nodes. Every memory sits ON the path, in real chronological
 // order (newest at the top, where the user lands; oldest at the bottom,
 // reached by scrolling down into their history). Nothing here is random:
@@ -117,19 +117,19 @@ export interface PathLayout {
   stars: PathStar[];
   /** The smooth SVG path 'd' running from "now" down through every star. */
   pathD: string;
-  /** ViewBox height — width is always 100. */
+  /** ViewBox height - width is always 100. */
   height: number;
-  /** Where "now" sits — the path always starts here, above the newest star. */
+  /** Where "now" sits - the path always starts here, above the newest star. */
   nowPoint: { x: number; y: number };
-  /** First star of each new category run, oldest-to-newest reading order — these get labels, the way Duolingo labels stages of the climb. */
+  /** First star of each new category run, oldest-to-newest reading order - these get labels, the way Duolingo labels stages of the climb. */
   waypoints: PathWaypoint[];
-  /** Faint secondary threads linking same-category stars that aren't adjacent on the path — the "related conversations form a constellation" pattern. */
+  /** Faint secondary threads linking same-category stars that aren't adjacent on the path - the "related conversations form a constellation" pattern. */
   threads: ConstellationThread[];
 }
 
 /**
  * Lays every memory out along one winding path. `spacingScale` is Universe's
- * real zoom control — it changes how far apart stars actually are (a true
+ * real zoom control - it changes how far apart stars actually are (a true
  * relayout), not just a CSS scale trick.
  */
 export function computePathLayout(memories: Memory[], spacingScale = 1): PathLayout {
@@ -196,7 +196,66 @@ export interface MiniTrailPoint {
   y: number;
 }
 
-/** A small horizontal teaser of the path — used for Home's preview card. Same wave, sideways. */
+export interface ConstellationSummary {
+  category: ConstellationCategory;
+  count: number;
+  firstDate: string;
+  latestDate: string;
+  /** The most-frequent real emotionKey among this category's memories - null when none carry one, never guessed. */
+  dominantEmotion: EmotionKey | null;
+}
+
+/**
+ * One real summary card per recurring theme (2+ memories sharing a
+ * category) - the same "constellation" grouping as `threads` above, but
+ * carrying the actual count/date-span/dominant-emotion instead of just SVG
+ * points. Everything here is derived, never invented: the emotion is
+ * whichever real emotionKey appears most often in that group, not a
+ * flattering guess.
+ */
+export function computeConstellationSummaries(memories: Memory[]): ConstellationSummary[] {
+  const byCategory = new Map<ConstellationCategory, Memory[]>();
+  for (const memory of memories) {
+    const category = getMemoryCategory(memory);
+    const list = byCategory.get(category) ?? [];
+    list.push(memory);
+    byCategory.set(category, list);
+  }
+
+  const summaries: ConstellationSummary[] = [];
+  for (const [category, list] of byCategory) {
+    if (list.length < 2) continue;
+    const sorted = [...list].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    );
+
+    const emotionCounts = new Map<EmotionKey, number>();
+    for (const memory of list) {
+      if (!memory.emotionKey) continue;
+      emotionCounts.set(memory.emotionKey, (emotionCounts.get(memory.emotionKey) ?? 0) + 1);
+    }
+    let dominantEmotion: EmotionKey | null = null;
+    let topCount = 0;
+    for (const [key, count] of emotionCounts) {
+      if (count > topCount) {
+        topCount = count;
+        dominantEmotion = key;
+      }
+    }
+
+    summaries.push({
+      category,
+      count: list.length,
+      firstDate: sorted[0].createdAt,
+      latestDate: sorted[sorted.length - 1].createdAt,
+      dominantEmotion,
+    });
+  }
+
+  return summaries.sort((a, b) => b.count - a.count);
+}
+
+/** A small horizontal teaser of the path - used for Home's preview card. Same wave, sideways. */
 export function computeMiniTrail(memories: Memory[], count = 6): MiniTrailPoint[] {
   const recent = memories.slice(0, count);
   const n = Math.max(1, recent.length - 1);
