@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Newsreader } from "next/font/google";
 import { LanguageProvider } from "@/lib/i18n";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const newsreader = Newsreader({
@@ -51,6 +52,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full" suppressHydrationWarning>
         <LanguageProvider>{children}</LanguageProvider>
+        <SpeedInsights />
       </body>
     </html>
   );
