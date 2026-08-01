@@ -1,11 +1,17 @@
 import type { Lang } from "@/lib/i18n";
 
-export interface AuroraResponse {
+type QueryType = "decision" | "planning" | "general";
+
+export interface AuroraOpening {
   situation: string;
   hypotheses: string[];
   rootCauseQuestion: string;
   framework: string;
   optionsDetected: [string, string] | null;
+  type: QueryType;
+}
+
+export interface AuroraFollowUp {
   tradeoffs: string[];
   recommendation: string;
   actionPlan: string[];
@@ -17,10 +23,17 @@ export interface AuroraResponse {
  * This mock still does real (if simple) analysis — pattern/keyword matching,
  * an actual "A or B" split — rather than pretending to reason about it. The
  * real model integration replaces this function; the UI contract stays the
- * same. Four canonical ambiguous complaints get a hand-built hypothesis set
- * (mirroring the product doc's worked examples); anything else gets a
- * generic hypothesis set keyed off the same decision/planning/general split
- * already used for options detection.
+ * same.
+ *
+ * Twelve situation patterns get a hand-built, evidence-grounded hypothesis
+ * set — each hypothesis is specific to that situation, the way a consultant
+ * who actually listened would offer possibilities, not a fortune-teller's
+ * generic psychology. Critically: when nothing matches, Aurora does NOT fall
+ * back to a generic hypothesis list. Guessing psychology with no grounding
+ * is exactly the failure mode this is designed to avoid — instead it asks a
+ * real clarifying question first, the same way a consultant says "I need to
+ * understand more before I can offer possibilities" rather than pretending
+ * to already know.
  */
 
 const DECISION_WORDS_VI = ["nên", "quyết định", "chọn", "hay là"];
@@ -56,7 +69,19 @@ function detectQueryType(text: string, lang: Lang): "decision" | "planning" | "g
   return "general";
 }
 
-type PatternKey = "procrastination" | "quit-job" | "need-money" | "feel-failure";
+type PatternKey =
+  | "procrastination"
+  | "quit-job"
+  | "need-money"
+  | "feel-failure"
+  | "living-alone"
+  | "breakup"
+  | "job-loss"
+  | "family-conflict"
+  | "health-scare"
+  | "grief"
+  | "relocation"
+  | "friendship-fading";
 
 const PATTERN_KEYWORDS: Record<PatternKey, Record<Lang, string[]>> = {
   procrastination: {
@@ -74,6 +99,38 @@ const PATTERN_KEYWORDS: Record<PatternKey, Record<Lang, string[]>> = {
   "feel-failure": {
     vi: ["mình là một thất bại", "cảm thấy thất bại", "mình thất bại"],
     en: ["feel like a failure", "i'm a failure", "i am a failure"],
+  },
+  "living-alone": {
+    vi: ["bạn cùng phòng", "dọn ra", "dọn đi", "sống một mình", "ở một mình"],
+    en: ["roommate moved out", "moved out", "living alone", "live alone", "on my own now"],
+  },
+  breakup: {
+    vi: ["chia tay"],
+    en: ["broke up", "breakup", "we broke up"],
+  },
+  "job-loss": {
+    vi: ["mất việc", "bị sa thải", "cho nghỉ việc", "thất nghiệp"],
+    en: ["lost my job", "got laid off", "got fired", "laid off"],
+  },
+  "family-conflict": {
+    vi: ["cãi nhau với bố mẹ", "cãi nhau với gia đình", "mâu thuẫn gia đình", "mâu thuẫn với bố mẹ"],
+    en: ["fighting with my parents", "family conflict", "argument with my family", "fighting with my family"],
+  },
+  "health-scare": {
+    vi: ["bác sĩ nói", "kết quả xét nghiệm", "chẩn đoán", "mới đi khám"],
+    en: ["diagnosed", "doctor said", "test results", "health scare"],
+  },
+  grief: {
+    vi: ["qua đời", "mất đi", "đám tang"],
+    en: ["passed away", "passed away recently", "funeral", "lost someone"],
+  },
+  relocation: {
+    vi: ["chuyển đến thành phố mới", "chuyển thành phố", "mới chuyển nhà"],
+    en: ["moved to a new city", "relocating", "just moved", "moved to a new"],
+  },
+  "friendship-fading": {
+    vi: ["bạn thân xa cách", "tình bạn phai nhạt", "không còn thân như trước"],
+    en: ["drifting apart", "friendship fading", "we're not close anymore", "growing apart"],
   },
 };
 
@@ -141,6 +198,92 @@ const PATTERN_CONTENT_VI: Record<PatternKey, StageContent> = {
     rootCauseQuestion: "Điều gì khiến bạn kết luận mình thất bại — và đó có phải là bằng chứng khách quan không?",
     framework: "Tách bạch bằng chứng thực tế khỏi cảm xúc đang chi phối bạn.",
   },
+  "living-alone": {
+    situation: "Bạn vừa trải qua một thay đổi lớn — từ sống cùng người khác sang sống một mình.",
+    hypotheses: [
+      "Bạn đang cảm thấy cô đơn?",
+      "Bạn lo về việc phải gánh chi phí một mình?",
+      "Việc nhà và trách nhiệm hàng ngày bỗng dưng tăng gấp đôi?",
+      "Căn nhà giờ cảm thấy trống trải về mặt cảm xúc?",
+      "Thay đổi này gợi nhắc đến một trải nghiệm khác trong quá khứ?",
+    ],
+    rootCauseQuestion: "Điều nào nghe gần đúng nhất với bạn?",
+    framework: "Một thay đổi hoàn cảnh sống thường mang theo nhiều lớp cảm xúc khác nhau — hãy tách chúng ra trước khi tìm giải pháp.",
+  },
+  breakup: {
+    situation: "Bạn vừa trải qua một cuộc chia tay.",
+    hypotheses: [
+      "Bạn đang tiếc nuối những gì đã mất, hay lo lắng về việc phải bắt đầu lại?",
+      "Có một phần thói quen hàng ngày giờ bỗng trống rỗng?",
+      "Bạn đang tự hỏi mình đã sai ở đâu?",
+      "Nỗi sợ cô đơn lớn hơn nỗi buồn về người đó?",
+    ],
+    rootCauseQuestion: "Điều nào đang chiếm nhiều tâm trí bạn nhất lúc này?",
+    framework: "Chia tay thường gộp chung nhiều loại mất mát khác nhau — đáng để tách ra mới biết mình đang thực sự đau vì điều gì.",
+  },
+  "job-loss": {
+    situation: "Bạn vừa mất công việc của mình.",
+    hypotheses: [
+      "Lo lắng về tài chính trước mắt?",
+      "Cảm giác bị từ chối, dù lý do có thể không liên quan đến năng lực?",
+      "Mất đi một phần bản sắc gắn với công việc đó?",
+      "Không chắc bước tiếp theo là gì?",
+    ],
+    rootCauseQuestion: "Trong những điều trên, điều gì đang nặng nề nhất với bạn ngay lúc này?",
+    framework: "Mất việc thường là một cú sốc tài chính và một cú sốc bản sắc cùng lúc — hai vấn đề cần hai hướng giải quyết khác nhau.",
+  },
+  "family-conflict": {
+    situation: "Bạn vừa có mâu thuẫn với gia đình.",
+    hypotheses: [
+      "Đây là một bất đồng cụ thể, hay một căng thẳng đã âm ỉ từ lâu?",
+      "Bạn cảm thấy không được lắng nghe hơn là không đồng ý?",
+      "Có một kỳ vọng cũ từ gia đình mà bạn đang cố thoát ra?",
+      "Bạn lo về việc mối quan hệ này sẽ ra sao sau chuyện này?",
+    ],
+    rootCauseQuestion: "Cái nào nghe gần với điều bạn đang cảm thấy nhất?",
+    framework: "Mâu thuẫn gia đình thường không chỉ về chuyện vừa xảy ra — đáng để phân biệt sự việc cụ thể với căng thẳng nền phía sau.",
+  },
+  "health-scare": {
+    situation: "Bạn vừa nhận được một tin tức sức khỏe khiến bạn lo lắng.",
+    hypotheses: [
+      "Nỗi sợ về điều chưa biết lớn hơn chính kết quả?",
+      "Bạn đang lo cho những người phụ thuộc vào bạn?",
+      "Bạn chưa có đủ thông tin để biết mức độ nghiêm trọng thực sự?",
+      "Điều này đang buộc bạn nhìn lại những ưu tiên khác trong cuộc sống?",
+    ],
+    rootCauseQuestion: "Điều gì đang chiếm tâm trí bạn nhiều nhất — nỗi sợ, hay sự không chắc chắn?",
+    framework: "Trước khi lo xa, đáng để tách rõ điều bạn đã biết chắc và điều vẫn còn là phỏng đoán.",
+  },
+  grief: {
+    situation: "Bạn vừa mất đi một người quan trọng với mình.",
+    hypotheses: [
+      "Bạn cần không gian để cảm nhận, hơn là để giải quyết điều gì?",
+      "Có điều gì đó chưa nói hết mà giờ bạn đang mang theo?",
+      "Bạn lo về việc phải tiếp tục cuộc sống như thể không có gì xảy ra?",
+    ],
+    rootCauseQuestion: "Ngay lúc này, bạn cần điều gì nhất — được lắng nghe, hay một điều gì đó cụ thể hơn?",
+    framework: "Đây không phải là một vấn đề cần giải quyết ngay — hãy để mình chậm lại trước.",
+  },
+  relocation: {
+    situation: "Bạn vừa chuyển đến một nơi ở mới.",
+    hypotheses: [
+      "Bạn đang nhớ những mối quan hệ và sự quen thuộc ở nơi cũ?",
+      "Áp lực phải xây dựng lại mọi thứ từ đầu — bạn bè, thói quen, nơi chốn?",
+      "Bạn đang tự hỏi liệu quyết định chuyển đến đây có đúng không?",
+    ],
+    rootCauseQuestion: "Điều nào đang nặng nề nhất với bạn lúc này?",
+    framework: "Một nơi ở mới thường đi kèm nhiều mất mát nhỏ trước khi có điều gì mới thay thế — bình thường nếu cảm giác này chưa qua ngay.",
+  },
+  "friendship-fading": {
+    situation: "Bạn đang cảm thấy một tình bạn quan trọng đang xa cách dần.",
+    hypotheses: [
+      "Có một sự kiện cụ thể đã tạo ra khoảng cách này?",
+      "Đây là kết quả tự nhiên của việc cuộc sống hai người thay đổi?",
+      "Bạn lo mình là người duy nhất cố gắng giữ mối quan hệ này?",
+    ],
+    rootCauseQuestion: "Điều nào nghe gần đúng nhất với những gì đang xảy ra?",
+    framework: "Tình bạn phai nhạt hiếm khi có một nguyên nhân duy nhất — đáng để xem đây là một sự kiện cụ thể hay một xu hướng dần dần.",
+  },
 };
 
 const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
@@ -192,90 +335,130 @@ const PATTERN_CONTENT_EN: Record<PatternKey, StageContent> = {
     rootCauseQuestion: "What evidence makes you conclude you're a failure — and is it objective?",
     framework: "Separate the actual evidence from the emotion driving this conclusion.",
   },
+  "living-alone": {
+    situation: "You've just been through a real change — from living with someone to living on your own.",
+    hypotheses: [
+      "You're feeling lonely?",
+      "You're worried about carrying costs alone now?",
+      "Daily responsibilities suddenly doubled?",
+      "The place feels emotionally empty?",
+      "This change is echoing another experience from before?",
+    ],
+    rootCauseQuestion: "Which of these feels closest to what's actually going on?",
+    framework: "A change in living situation usually carries more than one kind of loss — worth separating them before looking for a fix.",
+  },
+  breakup: {
+    situation: "You've just been through a breakup.",
+    hypotheses: [
+      "You're grieving what's lost, or dreading having to start over?",
+      "A piece of your daily routine now feels empty?",
+      "You're replaying where it went wrong?",
+      "The fear of being alone is bigger than the sadness about them?",
+    ],
+    rootCauseQuestion: "Which of these is taking up the most space in your head right now?",
+    framework: "A breakup usually bundles several different losses together — worth separating them to know what you're actually grieving.",
+  },
+  "job-loss": {
+    situation: "You've just lost your job.",
+    hypotheses: [
+      "Worry about money in the near term?",
+      "A feeling of rejection, even if the reason had nothing to do with your work?",
+      "Losing a part of your identity that was tied to that job?",
+      "Not knowing what the next step even is?",
+    ],
+    rootCauseQuestion: "Of those, which one feels heaviest right now?",
+    framework: "Job loss is usually a financial shock and an identity shock at the same time — they need two different responses.",
+  },
+  "family-conflict": {
+    situation: "You've just had a conflict with your family.",
+    hypotheses: [
+      "Is this one specific disagreement, or a tension that's been building for a while?",
+      "You feel unheard more than you disagree?",
+      "There's an old expectation from your family you're trying to break free of?",
+      "You're worried about what this means for the relationship going forward?",
+    ],
+    rootCauseQuestion: "Which of these feels closest to what you're actually feeling?",
+    framework: "Family conflict is rarely only about what just happened — worth separating the specific incident from the tension underneath it.",
+  },
+  "health-scare": {
+    situation: "You've just received health news that's worrying you.",
+    hypotheses: [
+      "Fear of the unknown is bigger than the result itself?",
+      "You're worried about the people who depend on you?",
+      "You don't have enough information yet to know how serious this actually is?",
+      "This is forcing you to reconsider other priorities in your life?",
+    ],
+    rootCauseQuestion: "What's occupying the most space right now — the fear, or the uncertainty?",
+    framework: "Before catastrophizing, it's worth separating what you actually know from what's still just a guess.",
+  },
+  grief: {
+    situation: "You've just lost someone important to you.",
+    hypotheses: [
+      "You need space to feel this, more than to solve anything?",
+      "There's something unsaid that you're carrying now?",
+      "You're worried about having to keep going as if nothing happened?",
+    ],
+    rootCauseQuestion: "Right now, what do you need most — to be heard, or something more specific?",
+    framework: "This isn't a problem to solve right now — let's slow down first.",
+  },
+  relocation: {
+    situation: "You've just moved somewhere new.",
+    hypotheses: [
+      "You're missing the relationships and familiarity from before?",
+      "The pressure of rebuilding everything from scratch — friends, routines, a sense of place?",
+      "You're second-guessing whether the move itself was the right call?",
+    ],
+    rootCauseQuestion: "Which of these feels heaviest right now?",
+    framework: "A new place usually comes with several small losses before anything new replaces them — it's normal if that hasn't passed yet.",
+  },
+  "friendship-fading": {
+    situation: "You're feeling an important friendship drift away.",
+    hypotheses: [
+      "Was there a specific moment that created this distance?",
+      "Is this just what happens when two lives change at different paces?",
+      "You're worried you're the only one still trying?",
+    ],
+    rootCauseQuestion: "Which of these feels closest to what's actually happening?",
+    framework: "Friendships rarely fade for just one reason — worth figuring out if this is one event or a slow drift.",
+  },
 };
 
-const GENERIC_VI: Record<"decision" | "planning" | "general", StageContent> = {
-  decision: {
-    situation: "Bạn đang đứng trước một quyết định và chưa chắc nên đi hướng nào.",
-    hypotheses: [
-      "Bạn đang thiếu thông tin quan trọng để quyết định?",
-      "Nỗi sợ chọn sai đang cản trở bạn nhiều hơn là chính quyết định?",
-      "Kỳ vọng của người khác đang lấn át điều bạn thực sự muốn?",
-      "Có nhiều hơn một quyết định đang bị gộp làm một?",
-    ],
-    rootCauseQuestion: "Trong những khả năng trên, điều nào nghe gần đúng nhất?",
-    framework: "Khung ra quyết định theo giá trị cốt lõi.",
-  },
-  planning: {
-    situation: "Bạn đang muốn lên kế hoạch cho điều gì đó nhưng chưa rõ nên bắt đầu từ đâu.",
-    hypotheses: [
-      "Mục tiêu cuối cùng chưa đủ rõ ràng?",
-      "Có quá nhiều bước khiến bạn choáng ngợp?",
-      "Kế hoạch phụ thuộc vào điều bạn không kiểm soát được?",
-      "Bạn đang lên kế hoạch cho điều người khác muốn, không phải điều bạn muốn?",
-    ],
-    rootCauseQuestion: "Điều nào đang thực sự cản trở bạn bắt đầu?",
-    framework: "Khung chia nhỏ mục tiêu thành bước hành động.",
-  },
-  general: {
-    situation: "Bạn đang cảm thấy mắc kẹt với điều này.",
-    hypotheses: [
-      "Đây có thể là vấn đề thiếu thông tin?",
-      "Cảm xúc đang chi phối nhiều hơn bạn nghĩ?",
-      "Có một nỗi sợ âm thầm đang ảnh hưởng đến điều này?",
-      "Kỳ vọng không thực tế đang tạo áp lực?",
-    ],
-    rootCauseQuestion: "Điều nào trong số này nghe gần đúng nhất với bạn?",
-    framework: "Khung xác định nguyên nhân gốc rễ.",
-  },
+// No pattern matched and no options were detected — there isn't enough
+// grounded signal to offer hypotheses honestly. A real consultant says "I
+// need to understand more" here instead of guessing psychology. These are
+// the only genuinely open-ended clarifying questions in the system — they
+// ask, they never claim to already know what's going on.
+const CLARIFYING_QUESTION_VI: Record<"decision" | "planning" | "general", string> = {
+  decision: "Điều gì khiến quyết định này khó nhất — là quá ít lựa chọn, hay quá nhiều lựa chọn?",
+  planning: "Bạn đã hình dung rõ đích đến chưa, hay chính bước đầu tiên mới là điều mơ hồ nhất?",
+  general: "Nếu phải chọn một câu để mô tả điều đang khó nhất lúc này, bạn sẽ nói gì?",
 };
 
-const GENERIC_EN: Record<"decision" | "planning" | "general", StageContent> = {
-  decision: {
-    situation: "You're facing a decision and aren't sure which way to go.",
-    hypotheses: [
-      "You're missing key information to decide?",
-      "Fear of choosing wrong is louder than the decision itself?",
-      "Someone else's expectations are drowning out what you actually want?",
-      "More than one decision is being bundled into one?",
-    ],
-    rootCauseQuestion: "Which of these feels closest to true?",
-    framework: "A values-first decision framework.",
-  },
-  planning: {
-    situation: "You want to plan something but aren't sure where to start.",
-    hypotheses: [
-      "The end goal isn't clear enough yet?",
-      "Too many steps at once feels overwhelming?",
-      "The plan depends on something outside your control?",
-      "You're planning for what someone else wants, not what you want?",
-    ],
-    rootCauseQuestion: "What's actually stopping you from starting?",
-    framework: "A goal-to-action breakdown framework.",
-  },
-  general: {
-    situation: "You're feeling stuck on this.",
-    hypotheses: [
-      "This might be a missing-information problem?",
-      "Emotion is driving more of this than you'd expect?",
-      "A quiet fear is shaping this more than you'd like?",
-      "An unrealistic expectation is creating the pressure?",
-    ],
-    rootCauseQuestion: "Which of these feels closest to true for you?",
-    framework: "A root-cause framework.",
-  },
+const CLARIFYING_QUESTION_EN: Record<"decision" | "planning" | "general", string> = {
+  decision: "What makes this decision hardest — too few options, or too many?",
+  planning: "Do you already know the destination clearly, or is the first step the unclear part?",
+  general: "If you had to name the single hardest part of this right now, what would you say?",
 };
 
 function tradeoffsFor(
   type: "decision" | "planning" | "general",
   options: [string, string] | null,
   context: string,
+  rootCauseReply: string,
   lang: Lang,
 ): string[] {
   const contextLine = context.trim()
     ? lang === "vi"
       ? [`Bạn vừa nhắc đến: "${context.trim()}" — điều đó ảnh hưởng thế nào đến hướng bạn chọn?`]
       : [`You mentioned: "${context.trim()}" — how does that shape which way you lean?`]
+    : [];
+  // A real reply to the root-cause question, fed straight back in — this is
+  // what makes the second half of the conversation actually informed by
+  // what the user just said, not a canned continuation.
+  const replyLine = rootCauseReply.trim()
+    ? lang === "vi"
+      ? [`Bạn vừa nói: "${rootCauseReply.trim()}" — điều đó cho thấy gì về hướng bạn nên đi?`]
+      : [`You just said: "${rootCauseReply.trim()}" — what does that suggest about which way to go?`]
     : [];
 
   if (options) {
@@ -293,6 +476,7 @@ function tradeoffsFor(
             "Which choice feels lighter when you imagine it a year from now?",
           ]),
       ...contextLine,
+      ...replyLine,
     ];
   }
   if (type === "planning") {
@@ -309,6 +493,7 @@ function tradeoffsFor(
             "Are you planning for what you want, or what you think you should want?",
           ]),
       ...contextLine,
+      ...replyLine,
     ];
   }
   return [
@@ -324,6 +509,7 @@ function tradeoffsFor(
           "Is there a quiet fear shaping this more than you'd like?",
         ]),
     ...contextLine,
+    ...replyLine,
   ];
 }
 
@@ -363,14 +549,20 @@ const REFLECTION_PROMPT_VI = "Sau cuộc trò chuyện này, điều gì rõ rà
 const REFLECTION_PROMPT_EN = "After this conversation, what's clearer to you than when you started?";
 
 /**
- * Aurora's consultant pipeline: Situation → Hypotheses → Root-cause question
- * → Framework → Options (if any) → Trade-offs → Recommendation → Action
- * plan → Reflection. Never skips straight to advice — hypotheses only get
- * skipped when the input already names concrete options to compare, since
- * at that point the ambiguity to resolve is which option, not what the
- * underlying issue even is.
+ * Aurora talks in two real turns rather than dumping a full report:
+ *
+ * 1. openConversation() — Situation, Hypotheses, Root-cause question,
+ *    Framework. This is what Aurora "says" first.
+ * 2. The UI collects a real reply to the root-cause question (or lets the
+ *    user skip it).
+ * 3. continueConversation() — Trade-offs, Recommendation, Action plan,
+ *    Reflection, now informed by that reply if one was given.
+ *
+ * Never skips straight to advice — hypotheses only get skipped when the
+ * input already names concrete options to compare, since at that point the
+ * ambiguity to resolve is which option, not what the underlying issue is.
  */
-export function generateAdvice(question: string, context: string, goal: string, lang: Lang): AuroraResponse {
+export function openConversation(question: string, lang: Lang): AuroraOpening {
   const type = detectQueryType(question, lang);
   const options = detectOptions(question, lang);
   const pattern = detectPattern(question, lang);
@@ -390,10 +582,40 @@ export function generateAdvice(question: string, context: string, goal: string, 
       framework: lang === "vi" ? "Khung so sánh lựa chọn theo giá trị dài hạn." : "A long-term value comparison framework.",
     };
   } else {
-    stage = (lang === "vi" ? GENERIC_VI : GENERIC_EN)[type];
+    // No grounded pattern, no options — don't fabricate hypotheses. Echo
+    // back what was actually said, and ask a real clarifying question
+    // instead of guessing at psychology with nothing to support it.
+    const trimmed = question.trim();
+    stage = {
+      situation: lang === "vi" ? `Bạn vừa chia sẻ: "${trimmed}"` : `You just shared: "${trimmed}"`,
+      hypotheses: [],
+      rootCauseQuestion: (lang === "vi" ? CLARIFYING_QUESTION_VI : CLARIFYING_QUESTION_EN)[type],
+      framework:
+        lang === "vi"
+          ? "Mình muốn hiểu rõ hơn trước khi cùng bạn tìm hướng đi."
+          : "I want to understand more before we look for a direction together.",
+    };
   }
 
-  const tradeoffs = tradeoffsFor(type, options, context, lang);
+  return {
+    situation: stage.situation,
+    hypotheses: stage.hypotheses,
+    rootCauseQuestion: stage.rootCauseQuestion,
+    framework: stage.framework,
+    optionsDetected: options,
+    type,
+  };
+}
+
+export function continueConversation(
+  type: QueryType,
+  options: [string, string] | null,
+  context: string,
+  goal: string,
+  rootCauseReply: string,
+  lang: Lang,
+): AuroraFollowUp {
+  const tradeoffs = tradeoffsFor(type, options, context, rootCauseReply, lang);
   const actionPlan = actionPlanFor(type, options, lang);
   const reflectionPrompt = lang === "vi" ? REFLECTION_PROMPT_VI : REFLECTION_PROMPT_EN;
 
@@ -405,17 +627,7 @@ export function generateAdvice(question: string, context: string, goal: string, 
     : "";
   const recommendation = base + goalLine;
 
-  return {
-    situation: stage.situation,
-    hypotheses: stage.hypotheses,
-    rootCauseQuestion: stage.rootCauseQuestion,
-    framework: stage.framework,
-    optionsDetected: options,
-    tradeoffs,
-    recommendation,
-    actionPlan,
-    reflectionPrompt,
-  };
+  return { tradeoffs, recommendation, actionPlan, reflectionPrompt };
 }
 
 export function starterPrompts(lang: Lang): string[] {
@@ -424,12 +636,12 @@ export function starterPrompts(lang: Lang): string[] {
         "Mình hay trì hoãn công việc quan trọng.",
         "Mình nên ở lại công việc hiện tại hay chuyển việc mới?",
         "Mình cảm thấy mình là một thất bại.",
-        "Mình muốn lên kế hoạch cho điều gì đó mới.",
+        "Bạn cùng phòng của mình mới dọn ra. Giờ mình sống một mình.",
       ]
     : [
         "I keep procrastinating on something important.",
         "Should I stay at my current job or take a new one?",
         "I feel like a failure.",
-        "I want to plan something new.",
+        "My roommate moved out. Now I live alone.",
       ];
 }

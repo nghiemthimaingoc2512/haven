@@ -1,17 +1,29 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useLanguage, type Lang } from "@/lib/i18n";
 import { useMemories, type Memory } from "@/lib/storage";
+import { computeStreak } from "@/lib/insights";
 import {
   CONSTELLATION_CATEGORIES,
-  computeStarPosition,
+  computePathLayout,
   getCategoryLabel,
   getMemoryCategory,
   type ConstellationCategory,
   type ConstellationColor,
 } from "@/lib/constellation";
 import { Moon } from "@/components/mascot/Moon";
+
+// A filter is only useful once there's real variety to filter between —
+// with one or two categories present it's just confusing chrome.
+const MIN_CATEGORIES_FOR_FILTER = 3;
+
+const STAR_MILESTONES = [5, 10, 25, 50, 100, 200];
+
+function nextStarMilestone(count: number): number | null {
+  return STAR_MILESTONES.find((m) => m > count) ?? null;
+}
 
 const CATEGORY_LIST = Object.keys(CONSTELLATION_CATEGORIES) as ConstellationCategory[];
 
@@ -44,6 +56,21 @@ function formatDate(iso: string, lang: Lang): string {
   });
 }
 
+// Deterministic decorative background stars — ambiance only, never tied to
+// a real memory, so they're clearly distinct from the path itself.
+function backgroundTwinkles(height: number) {
+  const count = Math.max(12, Math.round(height / 22));
+  return Array.from({ length: count }, (_, i) => {
+    const seed = (i * 2654435761) % 1000;
+    return {
+      x: (seed % 97) + 1,
+      y: ((seed * 7) % Math.max(1, Math.round(height))) + 4,
+      delay: (seed % 40) / 10,
+      size: 0.35 + (seed % 3) * 0.15,
+    };
+  });
+}
+
 export default function StoryPage() {
   const { lang, t } = useLanguage();
   const memories = useMemories();
@@ -51,85 +78,116 @@ export default function StoryPage() {
   const [zoom, setZoom] = useState(1);
   const [openMemory, setOpenMemory] = useState<Memory | null>(null);
 
-  const visible = filter === "all" ? memories : memories.filter((m) => getMemoryCategory(m) === filter);
-
   const activeCategories = useMemo(() => {
     const set = new Set<ConstellationCategory>();
     for (const m of memories) set.add(getMemoryCategory(m));
     return set;
   }, [memories]);
 
-  // faint lines connecting each category's stars, oldest to newest
-  const connections = useMemo(() => {
-    const byCategory = new Map<ConstellationCategory, Memory[]>();
-    for (const m of visible) {
-      const cat = getMemoryCategory(m);
-      const list = byCategory.get(cat) ?? [];
-      list.push(m);
-      byCategory.set(cat, list);
-    }
-    const lines: { category: ConstellationCategory; points: string }[] = [];
-    for (const [category, list] of byCategory) {
-      if (list.length < 2) continue;
-      const sorted = [...list].sort(
-        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-      const points = sorted
-        .map((m) => {
-          const p = computeStarPosition(m);
-          return `${p.x},${p.y}`;
-        })
-        .join(" ");
-      lines.push({ category, points });
-    }
-    return lines;
-  }, [visible]);
+  const layout = useMemo(() => computePathLayout(memories, zoom), [memories, zoom]);
+  const streak = computeStreak(memories);
+  const nextMilestone = nextStarMilestone(memories.length);
+  const twinkles = useMemo(() => backgroundTwinkles(layout.height), [layout.height]);
+
+  // Real growth-over-time for whatever category the open memory belongs to —
+  // count plus the earliest moment in that category, not a fabricated arc.
+  const openMemoryGrowth = useMemo(() => {
+    if (!openMemory) return null;
+    const category = getMemoryCategory(openMemory);
+    const inCategory = memories.filter((m) => getMemoryCategory(m) === category);
+    if (inCategory.length < 2) return { count: 1, firstDate: null };
+    const oldest = inCategory.reduce((a, b) => (new Date(a.createdAt) < new Date(b.createdAt) ? a : b));
+    return { count: inCategory.length, firstDate: formatDate(oldest.createdAt, lang) };
+  }, [openMemory, memories, lang]);
 
   return (
     <div className="haven-night-sky min-h-full px-6 py-10">
       <div className="mx-auto w-full max-w-2xl">
         <div className="flex items-center gap-3">
-          <Moon size={40} glow={false} />
-          <h1 className="font-serif text-3xl text-ink">{t.storyTitle}</h1>
+          <Moon size={40} priority />
+          <div>
+            <h1 className="font-serif text-3xl text-ink">{t.storyTitle}</h1>
+            <p className="text-sm text-muted">{t.constellationSubtitle}</p>
+          </div>
         </div>
 
         {memories.length === 0 ? (
-          <div className="haven-surface animate-rise mt-8 flex flex-col items-center gap-3 rounded-2xl px-6 py-10 text-center">
+          <div className="haven-surface animate-rise mt-8 flex flex-col items-center gap-4 rounded-3xl px-6 py-16 text-center">
+            <span
+              aria-hidden="true"
+              className="animate-glow-pulse h-3 w-3 rounded-full bg-star shadow-[0_0_16px_6px_rgba(255,233,168,0.5)]"
+            />
             <Moon size={56} />
             <p className="text-muted">{t.constellationEmpty}</p>
+            <Link
+              href="/talk"
+              className="haven-cta mt-2 rounded-full bg-primary px-6 py-3 text-sm text-white hover:bg-primary-hover"
+            >
+              {t.constellationBeginCta}
+            </Link>
           </div>
         ) : (
           <>
-            {/* Category filter */}
-            <div className="mt-6 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setFilter("all")}
-                className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
-                  filter === "all" ? "bg-primary text-white" : "haven-surface text-muted"
-                }`}
-              >
-                {t.constellationFilterAll}
-              </button>
-              {CATEGORY_LIST.filter((c) => activeCategories.has(c)).map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setFilter(category)}
-                  className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
-                    filter === category ? "bg-primary text-white" : "haven-surface text-muted"
-                  }`}
-                >
-                  {CONSTELLATION_CATEGORIES[category].icon} {getCategoryLabel(category, lang)}
-                </button>
-              ))}
+            {memories.length === 1 && (
+              <p className="animate-rise mt-4 text-center font-serif italic text-secondary">
+                {t.constellationFirstStar}
+              </p>
+            )}
+
+            {/* Milestones — real numbers, not fabricated gamification */}
+            <div className="mt-6 flex flex-wrap items-center gap-2 text-xs text-muted">
+              <span className="haven-surface rounded-full px-3 py-1.5">
+                ✨ {memories.length} {t.constellationMilestoneStars}
+              </span>
+              {streak >= 1 && (
+                <span className="haven-surface rounded-full px-3 py-1.5">
+                  🪴 {streak} {t.constellationMilestoneStreak}
+                </span>
+              )}
+              {layout.threads.length > 0 && (
+                <span className="haven-surface rounded-full px-3 py-1.5">
+                  🌌 {layout.threads.length} {t.constellationMilestoneThreads}
+                </span>
+              )}
+              {nextMilestone && (
+                <span className="rounded-full px-3 py-1.5 opacity-60">
+                  {nextMilestone - memories.length} {t.constellationNextMilestone} ({nextMilestone} {t.constellationMilestoneStars})
+                </span>
+              )}
             </div>
 
-            {/* Zoom controls */}
+            {/* Category filter — only shown once there's real variety to it; dims the path, never removes it */}
+            {activeCategories.size >= MIN_CATEGORIES_FOR_FILTER && (
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilter("all")}
+                  className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
+                    filter === "all" ? "bg-primary text-white" : "haven-surface text-muted"
+                  }`}
+                >
+                  {t.constellationFilterAll}
+                </button>
+                {CATEGORY_LIST.filter((c) => activeCategories.has(c)).map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    onClick={() => setFilter(category)}
+                    className={`rounded-full px-3 py-1.5 text-xs transition-colors ${
+                      filter === category ? "bg-primary text-white" : "haven-surface text-muted"
+                    }`}
+                  >
+                    {CONSTELLATION_CATEGORIES[category].icon} {getCategoryLabel(category, lang)}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Zoom — a real relayout (more or less space between stars), not a CSS trick */}
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setZoom((z) => Math.max(1, z - 0.25))}
+                onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.2).toFixed(2)))}
                 aria-label={t.constellationZoomOut}
                 className="haven-surface h-8 w-8 rounded-full text-ink"
               >
@@ -137,7 +195,7 @@ export default function StoryPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setZoom((z) => Math.min(2.5, z + 0.25))}
+                onClick={() => setZoom((z) => Math.min(1.8, +(z + 0.2).toFixed(2)))}
                 aria-label={t.constellationZoomIn}
                 className="haven-surface h-8 w-8 rounded-full text-ink"
               >
@@ -145,38 +203,91 @@ export default function StoryPage() {
               </button>
             </div>
 
-            {/* Star field */}
-            <div className="haven-surface animate-rise mt-4 aspect-square w-full overflow-hidden rounded-3xl">
+            {/* The path — one continuous winding journey, tall enough to scroll into */}
+            <div className="haven-surface animate-rise mt-4 overflow-hidden rounded-3xl px-2 py-6">
               <svg
-                viewBox="0 0 100 100"
-                className="h-full w-full transition-transform duration-500"
-                style={{ transform: `scale(${zoom})` }}
+                viewBox={`0 0 100 ${layout.height}`}
+                style={{ width: "100%", aspectRatio: `100 / ${layout.height}`, display: "block" }}
               >
-                {connections.map((line) => (
-                  <polyline
-                    key={line.category}
-                    points={line.points}
-                    fill="none"
-                    className={STROKE_CLASS[CONSTELLATION_CATEGORIES[line.category].color]}
-                    strokeWidth="0.3"
-                    opacity="0.35"
+                {twinkles.map((tw, i) => (
+                  <circle
+                    key={i}
+                    cx={tw.x}
+                    cy={tw.y}
+                    r={tw.size}
+                    className="animate-twinkle-slow fill-line"
+                    style={{ animationDelay: `${tw.delay}s` }}
                   />
                 ))}
-                {visible.map((memory) => {
-                  const pos = computeStarPosition(memory);
-                  const category = getMemoryCategory(memory);
-                  const color = CONSTELLATION_CATEGORIES[category].color;
+
+                {/* Faint threads linking recurring themes across time */}
+                {layout.threads.map((thread) => (
+                  <polyline
+                    key={thread.category}
+                    points={thread.points}
+                    fill="none"
+                    className={STROKE_CLASS[CONSTELLATION_CATEGORIES[thread.category].color]}
+                    strokeWidth="0.25"
+                    strokeDasharray="0.6 1.4"
+                    opacity={filter === "all" || filter === thread.category ? 0.4 : 0.08}
+                  />
+                ))}
+
+                {/* The path itself — glow layer, then a crisp line on top */}
+                <path d={layout.pathD} fill="none" className="stroke-secondary" strokeWidth="2.2" opacity="0.25" strokeLinecap="round" />
+                <path d={layout.pathD} fill="none" className="stroke-star" strokeWidth="0.5" opacity="0.85" strokeLinecap="round" />
+
+                {/* "You are here" */}
+                <circle cx={layout.nowPoint.x} cy={layout.nowPoint.y} r="1.6" className="animate-glow-pulse fill-star" />
+                <circle cx={layout.nowPoint.x} cy={layout.nowPoint.y} r="3.2" className="fill-star" opacity="0.18" />
+                <text
+                  x={layout.nowPoint.x}
+                  y={layout.nowPoint.y - 5}
+                  textAnchor="middle"
+                  fontSize="2.6"
+                  className="fill-ink"
+                  style={{ fontFamily: "var(--font-sans)" }}
+                >
+                  {t.constellationNowLabel}
+                </text>
+
+                {/* Waypoint labels — where a new theme begins, read oldest to newest */}
+                {layout.waypoints.map((w, i) => {
+                  const label = `${CONSTELLATION_CATEGORIES[w.category].icon} ${getCategoryLabel(w.category, lang)}`;
+                  const dimmed = filter !== "all" && filter !== w.category;
+                  const tx = w.side === "right" ? w.x + 4.5 : w.x - 4.5;
+                  return (
+                    <text
+                      key={`${w.category}-${i}`}
+                      x={tx}
+                      y={w.y + 1}
+                      textAnchor={w.side === "right" ? "start" : "end"}
+                      fontSize="2.4"
+                      className={dimmed ? "fill-muted" : "fill-ink"}
+                      opacity={dimmed ? 0.3 : 0.85}
+                      style={{ fontFamily: "var(--font-sans)" }}
+                    >
+                      {label}
+                    </text>
+                  );
+                })}
+
+                {/* Stars — one per memory, sitting exactly on the path */}
+                {layout.stars.map((star, i) => {
+                  const color = CONSTELLATION_CATEGORIES[star.category].color;
+                  const dimmed = filter !== "all" && filter !== star.category;
                   return (
                     <circle
-                      key={memory.id}
-                      cx={pos.x}
-                      cy={pos.y}
-                      r={pos.size / 4}
+                      key={star.memory.id}
+                      cx={star.x}
+                      cy={star.y}
+                      r={dimmed ? 0.9 : 1.5}
                       className={`animate-twinkle cursor-pointer ${FILL_CLASS[color]}`}
-                      style={{ animationDelay: `${pos.twinkleDelay}s` }}
-                      onClick={() => setOpenMemory(memory)}
+                      style={{ animationDelay: `${(i % 5) * 0.6}s` }}
+                      opacity={dimmed ? 0.25 : 1}
+                      onClick={() => setOpenMemory(star.memory)}
                     >
-                      <title>{memory.reflection}</title>
+                      <title>{star.memory.reflection}</title>
                     </circle>
                   );
                 })}
@@ -212,12 +323,19 @@ export default function StoryPage() {
                 ✕
               </button>
             </div>
-            <Moon size={36} glow={false} className="mt-4" />
+            <Moon size={36} className="mt-4" />
             <p className="mt-3 font-serif text-lg leading-relaxed text-ink">
               {openMemory.reflection}
             </p>
             {openMemory.standout && (
               <p className="mt-3 font-serif italic text-secondary">{openMemory.standout}</p>
+            )}
+            {openMemoryGrowth && (
+              <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
+                {openMemoryGrowth.firstDate
+                  ? `${openMemoryGrowth.count} ${t.constellationGrowthSince} ${openMemoryGrowth.firstDate}`
+                  : t.constellationGrowthSingle}
+              </p>
             )}
           </div>
         </div>

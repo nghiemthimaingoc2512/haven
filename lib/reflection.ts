@@ -251,3 +251,20 @@ export function generateReflection(transcript: string, lang: Lang): GeneratedRef
 
   return { reflection, standout, emotion, emotionKey, intensity, confidence, topics, people };
 }
+
+/** Human, non-technical invitations to start talking — never "type something." */
+export function talkStarterPrompts(lang: Lang): string[] {
+  return lang === "vi"
+    ? [
+        "Hôm nay có chuyện gì?",
+        "Có điều gì hôm nay chỉ mình bạn để ý?",
+        "Điều gì khiến bạn mỉm cười hôm nay?",
+        "Bạn đang nghĩ về điều gì?",
+      ]
+    : [
+        "What happened today?",
+        "Tell me something only you noticed today.",
+        "What made you smile today?",
+        "What's on your mind?",
+      ];
+}

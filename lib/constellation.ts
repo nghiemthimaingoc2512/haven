@@ -25,19 +25,17 @@ interface CategoryDefinition {
   labelVi: string;
   labelEn: string;
   color: ConstellationColor;
-  // normalized 0-100 position of this category's "galaxy" center
-  center: { x: number; y: number };
 }
 
 export const CONSTELLATION_CATEGORIES: Record<ConstellationCategory, CategoryDefinition> = {
-  growth: { icon: "🌱", labelVi: "Trưởng thành", labelEn: "Growth", color: "star", center: { x: 50, y: 50 } },
-  love: { icon: "💗", labelVi: "Tình yêu", labelEn: "Love", color: "accent-pink", center: { x: 65, y: 50 } },
-  career: { icon: "💼", labelVi: "Sự nghiệp", labelEn: "Career", color: "soft-blue", center: { x: 82, y: 32 } },
-  family: { icon: "🏡", labelVi: "Gia đình", labelEn: "Family", color: "secondary", center: { x: 48, y: 88 } },
-  health: { icon: "🩹", labelVi: "Sức khỏe", labelEn: "Health", color: "accent-pink", center: { x: 74, y: 72 } },
-  dreams: { icon: "🌠", labelVi: "Giấc mơ", labelEn: "Dreams", color: "star", center: { x: 50, y: 14 } },
-  stress: { icon: "🌧️", labelVi: "Căng thẳng", labelEn: "Stress", color: "primary", center: { x: 18, y: 32 } },
-  joy: { icon: "✨", labelVi: "Niềm vui", labelEn: "Joy", color: "lavender", center: { x: 20, y: 72 } },
+  growth: { icon: "🌱", labelVi: "Trưởng thành", labelEn: "Growth", color: "star" },
+  love: { icon: "💗", labelVi: "Tình yêu", labelEn: "Love", color: "accent-pink" },
+  career: { icon: "💼", labelVi: "Sự nghiệp", labelEn: "Career", color: "soft-blue" },
+  family: { icon: "🏡", labelVi: "Gia đình", labelEn: "Family", color: "secondary" },
+  health: { icon: "🩹", labelVi: "Sức khỏe", labelEn: "Health", color: "accent-pink" },
+  dreams: { icon: "🌠", labelVi: "Giấc mơ", labelEn: "Dreams", color: "star" },
+  stress: { icon: "🌧️", labelVi: "Căng thẳng", labelEn: "Stress", color: "primary" },
+  joy: { icon: "✨", labelVi: "Niềm vui", labelEn: "Joy", color: "lavender" },
 };
 
 // Real life-topic signal (from lib/reflection.ts's keyword detection) maps
@@ -81,35 +79,131 @@ export function getCategoryLabel(category: ConstellationCategory, lang: Lang): s
   return lang === "vi" ? def.labelVi : def.labelEn;
 }
 
-/** Stable string hash (djb2) — same input always produces the same output, so star layout never jitters between renders. */
-function hashString(input: string): number {
-  let hash = 5381;
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash * 33) ^ input.charCodeAt(i);
-  }
-  return Math.abs(hash);
-}
+// --- Path layout ---------------------------------------------------------
+//
+// The Universe is one continuous, winding path through the sky — not a
+// scatter of nodes. Every memory sits ON the path, in real chronological
+// order (newest at the top, where the user lands; oldest at the bottom,
+// reached by scrolling down into their history). Nothing here is random:
+// the curve is a deterministic wave, and each star's position is a direct
+// function of its place in the sequence.
 
-export interface StarPosition {
+const CENTER_X = 50;
+const AMPLITUDE = 24;
+const TOP_PADDING = 46;
+const BOTTOM_PADDING = 40;
+
+export interface PathStar {
+  memory: Memory;
   x: number;
   y: number;
-  size: number;
-  twinkleDelay: number;
+  category: ConstellationCategory;
 }
 
-/** Deterministic position within a memory's category "galaxy" — jitter derived from the memory's own id, not randomness. */
-export function computeStarPosition(memory: Memory): StarPosition {
-  const category = getMemoryCategory(memory);
-  const center = CONSTELLATION_CATEGORIES[category].center;
-  const h = hashString(memory.id);
+export interface PathWaypoint {
+  x: number;
+  y: number;
+  category: ConstellationCategory;
+  side: "left" | "right";
+}
 
-  const angle = (h % 360) * (Math.PI / 180);
-  const radius = 6 + (h % 13); // 6-18 units out from the category center
-  const x = Math.min(96, Math.max(4, center.x + Math.cos(angle) * radius));
-  const y = Math.min(96, Math.max(4, center.y + Math.sin(angle) * radius));
+export interface ConstellationThread {
+  category: ConstellationCategory;
+  points: string;
+}
 
-  const size = 3 + (h % 4); // 3-6px
-  const twinkleDelay = (h % 40) / 10; // 0-4s
+export interface PathLayout {
+  /** Every memory's position on the path, newest first (matches useMemories()'s order). */
+  stars: PathStar[];
+  /** The smooth SVG path 'd' running from "now" down through every star. */
+  pathD: string;
+  /** ViewBox height — width is always 100. */
+  height: number;
+  /** Where "now" sits — the path always starts here, above the newest star. */
+  nowPoint: { x: number; y: number };
+  /** First star of each new category run, oldest-to-newest reading order — these get labels, the way Duolingo labels stages of the climb. */
+  waypoints: PathWaypoint[];
+  /** Faint secondary threads linking same-category stars that aren't adjacent on the path — the "related conversations form a constellation" pattern. */
+  threads: ConstellationThread[];
+}
 
-  return { x, y, size, twinkleDelay };
+/**
+ * Lays every memory out along one winding path. `spacingScale` is Universe's
+ * real zoom control — it changes how far apart stars actually are (a true
+ * relayout), not just a CSS scale trick.
+ */
+export function computePathLayout(memories: Memory[], spacingScale = 1): PathLayout {
+  const ySpacing = 58 * spacingScale;
+  const amplitude = AMPLITUDE;
+
+  const stars: PathStar[] = memories.map((memory, i) => ({
+    memory,
+    x: CENTER_X + Math.sin(i * 0.85) * amplitude,
+    y: TOP_PADDING + i * ySpacing,
+    category: getMemoryCategory(memory),
+  }));
+
+  const nowPoint = { x: CENTER_X, y: TOP_PADDING - 26 };
+  const height = TOP_PADDING + Math.max(0, stars.length - 1) * ySpacing + BOTTOM_PADDING;
+
+  // Smooth cubic-bezier path from "now" through every star, oldest star last.
+  let pathD = `M ${nowPoint.x} ${nowPoint.y}`;
+  let prev = nowPoint;
+  for (const star of stars) {
+    const midY = (prev.y + star.y) / 2;
+    pathD += ` C ${prev.x} ${midY}, ${star.x} ${midY}, ${star.x} ${star.y}`;
+    prev = star;
+  }
+
+  // Waypoints: walk oldest-to-newest (reverse of the newest-first array) so
+  // "a new run starts" reads the way a life actually unfolds.
+  const waypoints: PathWaypoint[] = [];
+  for (let i = stars.length - 1; i >= 0; i--) {
+    const olderIndex = i + 1;
+    const isRunStart = olderIndex >= stars.length || stars[olderIndex].category !== stars[i].category;
+    if (isRunStart) {
+      waypoints.push({
+        x: stars[i].x,
+        y: stars[i].y,
+        category: stars[i].category,
+        side: stars[i].x >= CENTER_X ? "right" : "left",
+      });
+    }
+  }
+
+  // Threads: same category, oldest to newest, only when there's an actual
+  // recurring pattern (2+ moments) worth showing as its own constellation.
+  const byCategory = new Map<ConstellationCategory, PathStar[]>();
+  for (let i = stars.length - 1; i >= 0; i--) {
+    const s = stars[i];
+    const list = byCategory.get(s.category) ?? [];
+    list.push(s);
+    byCategory.set(s.category, list);
+  }
+  const threads: ConstellationThread[] = [...byCategory.entries()]
+    .filter(([, list]) => list.length >= 2)
+    .map(([category, list]) => ({
+      category,
+      points: list.map((s) => `${s.x},${s.y}`).join(" "),
+    }));
+
+  return { stars, pathD, height, nowPoint, waypoints, threads };
+}
+
+export interface MiniTrailPoint {
+  memory: Memory;
+  x: number;
+  y: number;
+}
+
+/** A small horizontal teaser of the path — used for Home's preview card. Same wave, sideways. */
+export function computeMiniTrail(memories: Memory[], count = 6): MiniTrailPoint[] {
+  const recent = memories.slice(0, count);
+  const n = Math.max(1, recent.length - 1);
+  // oldest-to-newest, left-to-right
+  return [...recent].reverse().map((memory, i) => ({
+    memory,
+    x: 6 + (i / n) * 88,
+    y: 15 + Math.sin(i * 1.1) * 10,
+  }));
 }

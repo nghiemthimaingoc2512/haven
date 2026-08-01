@@ -7,7 +7,7 @@ import {
   type SpeechRecognitionStatus,
 } from "@/hooks/useSpeechRecognition";
 import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
-import { generateReflection } from "@/lib/reflection";
+import { generateReflection, talkStarterPrompts } from "@/lib/reflection";
 import { saveMemory, createMemoryId } from "@/lib/storage";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/mascot/Moon";
@@ -266,7 +266,7 @@ function TalkPageInner() {
   if (phase === "processing") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-        <Moon size={80} />
+        <Moon size={80} priority />
         <p key={processingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
           {processingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
@@ -307,7 +307,7 @@ function TalkPageInner() {
       <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
         {mode === "voice" && (
           <div className="flex flex-col items-center gap-3">
-            <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} />
+            <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} priority />
             {!hasContent && status === "idle" && (
               <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
             )}
@@ -328,6 +328,24 @@ function TalkPageInner() {
             autoFocus
           />
         </div>
+
+        {mode === "text" && !hasContent && (
+          <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2">
+            {talkStarterPrompts(lang).map((prompt) => (
+              <button
+                key={prompt}
+                type="button"
+                onClick={() => {
+                  setText(prompt);
+                  textareaRef.current?.focus();
+                }}
+                className="haven-surface animate-rise rounded-full px-4 py-2 text-sm text-ink transition-transform hover:-translate-y-0.5"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex w-full flex-col items-center gap-4 pb-6">

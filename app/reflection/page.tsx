@@ -25,7 +25,7 @@ export default function ReflectionPage() {
   if (!latest) {
     return (
       <main className="flex min-h-full flex-col items-center justify-center px-6 py-24">
-        <Moon size={64} />
+        <Moon size={64} priority />
         <p className="mt-4 max-w-sm text-center font-serif text-xl text-muted">
           {t.emptyMemoriesBody}
         </p>
@@ -43,7 +43,7 @@ export default function ReflectionPage() {
     <main className="flex min-h-full flex-col px-6 py-10">
       <header className="flex w-full items-center justify-between">
         <span className="flex items-center gap-1.5 font-serif text-sm text-muted">
-          <Moon size={18} glow={false} animate={false} />
+          <Moon size={18} animate={false} priority />
           {t.brand}
         </span>
         <Link href="/story" className="text-sm text-muted hover:text-ink">
@@ -67,7 +67,7 @@ export default function ReflectionPage() {
 
           <div className="animate-rise haven-surface rounded-2xl px-8 py-10">
             <div className="flex items-center gap-3">
-              <Moon size={40} glow={false} />
+              <Moon size={40} priority />
               <p className="text-xs uppercase tracking-wide text-muted">
                 {t.reflectionHeading}
               </p>

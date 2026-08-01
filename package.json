@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "mascot:process": "node scripts/process-mascot.mjs"
+    "brand:derive": "node scripts/derive-brand-assets.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.28.0",

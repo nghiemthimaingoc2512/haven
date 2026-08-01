@@ -66,6 +66,14 @@ export interface Copy {
   navDiscover: string;
   navMyStory: string;
   navMe: string;
+  navAriaLabel: string;
+  navProfile: string;
+  navSettings: string;
+  navSignOut: string;
+  navLanguageLabel: string;
+  navThemeLabel: string;
+  navAboutLabel: string;
+  navAboutBody: string;
   homeGreetingMorning: string;
   homeGreetingAfternoon: string;
   homeGreetingEvening: string;
@@ -118,16 +126,20 @@ export interface Copy {
   auroraReflectionLabel: string;
   auroraNewQuestion: string;
   auroraTryPrompt: string;
+  auroraReplyPlaceholder: string;
+  auroraYourReplyLabel: string;
+  auroraContinue: string;
+  auroraSkip: string;
   constellationEmpty: string;
   constellationFilterAll: string;
   constellationZoomIn: string;
   constellationZoomOut: string;
   constellationClose: string;
+  constellationNowLabel: string;
   nightWindDown: string;
   nightRitualTitle: string;
   nightBreathing: string;
   nightReadMemories: string;
-  nightDreamJournal: string;
   weeklyReflectionLabel: string;
   weeklyReflectionBody: string;
   constellationPreviewLabel: string;
@@ -155,6 +167,23 @@ export interface Copy {
   emotionNoDataYet: string;
   homeWhisperCardBody: string;
   homeAuroraCardBody: string;
+  homeContinueConversation: string;
+  constellationGrowthSince: string;
+  constellationGrowthSingle: string;
+  memoryTitle: string;
+  memorySubtitle: string;
+  memoryToday: string;
+  memoryEarlier: string;
+  memoryEmptyTitle: string;
+  memoryEmptyBody: string;
+  memoryEmptyCta: string;
+  constellationSubtitle: string;
+  constellationFirstStar: string;
+  constellationMilestoneStreak: string;
+  constellationMilestoneStars: string;
+  constellationMilestoneThreads: string;
+  constellationNextMilestone: string;
+  constellationBeginCta: string;
 }
 
 const dictionary: Record<Lang, Copy> = {
@@ -185,13 +214,13 @@ const dictionary: Record<Lang, Copy> = {
     statusUnsupported: "Trình duyệt này chưa hỗ trợ giọng nói. Hãy gõ thay.",
     processingListening: "Thì thầm đang lắng nghe…",
     processingReflecting: "Đang suy ngẫm…",
-    reflectionHeading: "Suy ngẫm hôm nay",
+    reflectionHeading: "Một điều đáng nhớ",
     savedLabel: "Đã lưu ✓",
     willRemember: "Mình sẽ ghi nhớ điều này.",
     firstConversation: "Đây là khởi đầu câu chuyện của bạn.",
     lastTime: "Lần trước bạn có nhắc đến",
     standoutLabel: "Một điều nổi bật:",
-    viewHistory: "Xem lịch sử",
+    viewHistory: "Những câu chuyện đã qua",
     newConversation: "Trò chuyện mới",
     historyTitle: "Lịch sử",
     historyToday: "Hôm nay",
@@ -200,17 +229,25 @@ const dictionary: Record<Lang, Copy> = {
     historyEarlier: "Trước đó",
     historyEmpty: "Chưa có cuộc trò chuyện nào.",
     backToTalk: "Quay lại trò chuyện",
-    storyTitle: "Chòm sao của bạn",
+    storyTitle: "Bầu trời trưởng thành",
     onboardingContinue: "Tiếp tục",
     onboardingNameTitle: "Haven nên gọi bạn là gì?",
     onboardingNamePlaceholder: "Ví dụ: Bảo, Linh, An…",
     onboardingLangTitle: "Ngôn ngữ bạn muốn dùng",
     onboardingEnter: "Vào Haven",
-    navHome: "Trang chính",
+    navHome: "Tổ ấm",
     navTalk: "Thì thầm",
     navDiscover: "Cực quang",
-    navMyStory: "Chòm sao",
+    navMyStory: "Bầu trời",
     navMe: "Tôi",
+    navAriaLabel: "Điều hướng chính",
+    navProfile: "Hồ sơ",
+    navSettings: "Cài đặt",
+    navSignOut: "Đăng xuất",
+    navLanguageLabel: "Đổi ngôn ngữ",
+    navThemeLabel: "Đổi giao diện",
+    navAboutLabel: "Giới thiệu Haven",
+    navAboutBody: "Đây là bản dùng thử — chưa có kênh hỗ trợ chính thức.",
     homeGreetingMorning: "Chào buổi sáng",
     homeGreetingAfternoon: "Chào buổi chiều",
     homeGreetingEvening: "Chào buổi tối",
@@ -247,7 +284,11 @@ const dictionary: Record<Lang, Copy> = {
     savedToJourney: "Đã lưu vào hành trình cảm xúc của bạn.",
     auroraIntro: "Mình ở đây để cùng bạn suy nghĩ.",
     auroraPlaceholder: "Bạn đang phân vân điều gì?",
-    auroraSend: "Hỏi Aurora",
+    auroraSend: "Cùng nghĩ nhé",
+    auroraReplyPlaceholder: "Bạn nghĩ sao?",
+    auroraYourReplyLabel: "Bạn đã nói",
+    auroraContinue: "Tiếp tục",
+    auroraSkip: "Bỏ qua, cứ tiếp tục",
     auroraProblemLabel: "Vấn đề",
     auroraContextLabel: "Bối cảnh (không bắt buộc)",
     auroraContextPlaceholder: "Có gì phía sau chuyện này mà đáng để biết không?",
@@ -258,7 +299,7 @@ const dictionary: Record<Lang, Copy> = {
     auroraFrameworkLabel: "Cách tiếp cận",
     auroraOptionsLabel: "Các lựa chọn",
     auroraTradeoffsLabel: "Đánh đổi cần cân nhắc",
-    auroraRecommendationLabel: "Gợi ý",
+    auroraRecommendationLabel: "Đây là điều mình thấy",
     auroraActionPlanLabel: "Kế hoạch hành động",
     auroraReflectionLabel: "Để suy ngẫm thêm",
     auroraNewQuestion: "Hỏi điều khác",
@@ -268,17 +309,17 @@ const dictionary: Record<Lang, Copy> = {
     constellationZoomIn: "Phóng to",
     constellationZoomOut: "Thu nhỏ",
     constellationClose: "Đóng",
+    constellationNowLabel: "Bạn đang ở đây",
     nightWindDown: "Cùng nhau chậm lại nhé.",
     nightRitualTitle: "Nghi thức buổi tối",
     nightBreathing: "Hãy cùng thở nhé",
     nightReadMemories: "Đọc lại ký ức hôm nay",
-    nightDreamJournal: "Nhật ký giấc mơ",
     weeklyReflectionLabel: "Suy ngẫm tuần này",
     weeklyReflectionBody: "Tuần này bạn đã trò chuyện",
-    constellationPreviewLabel: "Xem trước chòm sao",
+    constellationPreviewLabel: "Xem trước bầu trời trưởng thành",
     meNotifications: "Thông báo",
-    meAiMemory: "Trí nhớ AI",
-    meAiMemoryBody: "Thì thầm ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Chòm sao.",
+    meAiMemory: "Điều mình nhớ về bạn",
+    meAiMemoryBody: "Thì thầm ghi nhớ những gì bạn chia sẻ để hiểu bạn hơn theo thời gian. Bạn có thể xem hoặc xoá bất cứ lúc nào trong Bầu trời trưởng thành.",
     mePrivacy: "Quyền riêng tư",
     mePrivacyBody: "Mọi dữ liệu hiện được lưu trực tiếp trên thiết bị của bạn — không có máy chủ, không chia sẻ với bên thứ ba.",
     meExport: "Xuất dữ liệu",
@@ -300,6 +341,23 @@ const dictionary: Record<Lang, Copy> = {
     emotionNoDataYet: "Chưa có đủ dữ liệu để hiển thị.",
     homeWhisperCardBody: "Người bạn luôn lắng nghe bạn mỗi ngày.",
     homeAuroraCardBody: "Người cố vấn giúp bạn suy nghĩ rõ ràng hơn.",
+    homeContinueConversation: "Tiếp tục cuộc trò chuyện",
+    constellationGrowthSince: "khoảnh khắc trong vùng này, từ",
+    constellationGrowthSingle: "Đây là khoảnh khắc đầu tiên của bạn trong vùng này.",
+    memoryTitle: "Nhật ký của bạn",
+    memorySubtitle: "Những điều bạn đã chia sẻ với Thì thầm, được giữ lại nguyên vẹn.",
+    memoryToday: "Hôm nay",
+    memoryEarlier: "Trước đó",
+    memoryEmptyTitle: "Chưa có trang nhật ký nào.",
+    memoryEmptyBody: "Trò chuyện với Thì thầm để bắt đầu trang đầu tiên.",
+    memoryEmptyCta: "Bắt đầu trò chuyện",
+    constellationSubtitle: "Mỗi cuộc trò chuyện trở thành một vì sao. Đây là bầu trời của sự trưởng thành của bạn.",
+    constellationFirstStar: "✨ Bạn vừa thắp sáng ngôi sao đầu tiên trong bầu trời của mình.",
+    constellationMilestoneStreak: "ngày liên tiếp",
+    constellationMilestoneStars: "vì sao",
+    constellationMilestoneThreads: "chòm sao đã hình thành",
+    constellationNextMilestone: "cuộc trò chuyện nữa đến mốc tiếp theo",
+    constellationBeginCta: "Bắt đầu cuộc trò chuyện đầu tiên",
   },
   en: {
     brand: "Haven",
@@ -329,13 +387,13 @@ const dictionary: Record<Lang, Copy> = {
       "Voice isn't available in this browser. Type instead.",
     processingListening: "Whisper is listening…",
     processingReflecting: "Reflecting…",
-    reflectionHeading: "Today's reflection",
+    reflectionHeading: "Something worth remembering",
     savedLabel: "Saved ✓",
     willRemember: "I'll remember this.",
     firstConversation: "This is the beginning of your story.",
     lastTime: "Last time you mentioned",
     standoutLabel: "One thing that stood out:",
-    viewHistory: "View history",
+    viewHistory: "The stories we've lived",
     newConversation: "New conversation",
     historyTitle: "History",
     historyToday: "Today",
@@ -344,17 +402,25 @@ const dictionary: Record<Lang, Copy> = {
     historyEarlier: "Earlier",
     historyEmpty: "No conversations yet.",
     backToTalk: "Back to talking",
-    storyTitle: "Your Constellation",
+    storyTitle: "Growing Sky",
     onboardingContinue: "Continue",
     onboardingNameTitle: "What should Haven call you?",
     onboardingNamePlaceholder: "Alex, Emma, Bao…",
     onboardingLangTitle: "Preferred language",
     onboardingEnter: "Enter Haven",
-    navHome: "Home",
+    navHome: "Nest",
     navTalk: "Whisper",
     navDiscover: "Aurora",
-    navMyStory: "Constellation",
+    navMyStory: "Growing Sky",
     navMe: "Me",
+    navAriaLabel: "Main navigation",
+    navProfile: "Profile",
+    navSettings: "Settings",
+    navSignOut: "Sign out",
+    navLanguageLabel: "Change language",
+    navThemeLabel: "Change appearance",
+    navAboutLabel: "About Haven",
+    navAboutBody: "This is a prototype — there's no official support channel yet.",
     homeGreetingMorning: "Good morning",
     homeGreetingAfternoon: "Good afternoon",
     homeGreetingEvening: "Good evening",
@@ -391,7 +457,11 @@ const dictionary: Record<Lang, Copy> = {
     savedToJourney: "Saved to your emotional journey.",
     auroraIntro: "I'm here to think alongside you.",
     auroraPlaceholder: "What are you weighing right now?",
-    auroraSend: "Ask Aurora",
+    auroraSend: "Let's think together",
+    auroraReplyPlaceholder: "What do you think?",
+    auroraYourReplyLabel: "You said",
+    auroraContinue: "Continue",
+    auroraSkip: "Skip, just continue",
     auroraProblemLabel: "Problem",
     auroraContextLabel: "Context (optional)",
     auroraContextPlaceholder: "Any background that matters here?",
@@ -402,7 +472,7 @@ const dictionary: Record<Lang, Copy> = {
     auroraFrameworkLabel: "Approach",
     auroraOptionsLabel: "Options",
     auroraTradeoffsLabel: "Trade-offs to weigh",
-    auroraRecommendationLabel: "Recommendation",
+    auroraRecommendationLabel: "Here's what I see",
     auroraActionPlanLabel: "Action plan",
     auroraReflectionLabel: "Worth reflecting on",
     auroraNewQuestion: "Ask something else",
@@ -412,17 +482,17 @@ const dictionary: Record<Lang, Copy> = {
     constellationZoomIn: "Zoom in",
     constellationZoomOut: "Zoom out",
     constellationClose: "Close",
+    constellationNowLabel: "You are here",
     nightWindDown: "Let's slow down together.",
     nightRitualTitle: "Night Ritual",
     nightBreathing: "Let's breathe together",
     nightReadMemories: "Read today's memories",
-    nightDreamJournal: "Dream Journal",
     weeklyReflectionLabel: "This week's reflection",
     weeklyReflectionBody: "You've talked this week",
-    constellationPreviewLabel: "Constellation preview",
+    constellationPreviewLabel: "Preview your growing sky",
     meNotifications: "Notifications",
-    meAiMemory: "AI Memory",
-    meAiMemoryBody: "Whisper remembers what you share to understand you better over time. You can view or delete anything anytime in Constellation.",
+    meAiMemory: "What I remember about you",
+    meAiMemoryBody: "Whisper remembers what you share to understand you better over time. You can view or delete anything anytime in Growing Sky.",
     mePrivacy: "Privacy",
     mePrivacyBody: "Everything is currently stored directly on your device — no server, nothing shared with third parties.",
     meExport: "Export data",
@@ -444,6 +514,23 @@ const dictionary: Record<Lang, Copy> = {
     emotionNoDataYet: "Not enough data to show yet.",
     homeWhisperCardBody: "The friend who's always listening.",
     homeAuroraCardBody: "The consultant who helps you think clearly.",
+    homeContinueConversation: "Continue our conversation",
+    constellationGrowthSince: "moments in this area, since",
+    constellationGrowthSingle: "This is your first moment in this area.",
+    memoryTitle: "Your Journal",
+    memorySubtitle: "Everything you've shared with Whisper, kept exactly as it was.",
+    memoryToday: "Today",
+    memoryEarlier: "Earlier",
+    memoryEmptyTitle: "No pages yet.",
+    memoryEmptyBody: "Talk to Whisper to start your first page.",
+    memoryEmptyCta: "Start talking",
+    constellationSubtitle: "Every conversation becomes a star. This is the sky of your growth.",
+    constellationFirstStar: "✨ You just lit the first star in your sky.",
+    constellationMilestoneStreak: "day streak",
+    constellationMilestoneStars: "stars",
+    constellationMilestoneThreads: "constellations formed",
+    constellationNextMilestone: "more conversations to your next milestone",
+    constellationBeginCta: "Begin your first conversation",
   },
 };
 

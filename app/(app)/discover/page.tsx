@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useLanguage } from "@/lib/i18n";
-import { generateAdvice, starterPrompts, type AuroraResponse } from "@/lib/aurora";
+import {
+  openConversation,
+  continueConversation,
+  starterPrompts,
+  type AuroraOpening,
+  type AuroraFollowUp,
+} from "@/lib/aurora";
 import { Moon } from "@/components/mascot/Moon";
 
 export default function AuroraPage() {
@@ -11,13 +17,22 @@ export default function AuroraPage() {
   const [context, setContext] = useState("");
   const [goal, setGoal] = useState("");
   const [submitted, setSubmitted] = useState<{ problem: string; context: string; goal: string } | null>(null);
-  const [response, setResponse] = useState<AuroraResponse | null>(null);
+  const [opening, setOpening] = useState<AuroraOpening | null>(null);
+  const [rootCauseReply, setRootCauseReply] = useState("");
+  const [followUp, setFollowUp] = useState<AuroraFollowUp | null>(null);
 
   const ask = (text: string, ctx = context, g = goal) => {
     const trimmed = text.trim();
     if (!trimmed) return;
     setSubmitted({ problem: trimmed, context: ctx, goal: g });
-    setResponse(generateAdvice(trimmed, ctx, g, lang));
+    setOpening(openConversation(trimmed, lang));
+  };
+
+  const respondToRootCause = (reply: string) => {
+    if (!opening || !submitted) return;
+    setFollowUp(
+      continueConversation(opening.type, opening.optionsDetected, submitted.context, submitted.goal, reply, lang),
+    );
   };
 
   const reset = () => {
@@ -25,7 +40,9 @@ export default function AuroraPage() {
     setContext("");
     setGoal("");
     setSubmitted(null);
-    setResponse(null);
+    setOpening(null);
+    setRootCauseReply("");
+    setFollowUp(null);
   };
 
   return (
@@ -57,7 +74,7 @@ export default function AuroraPage() {
           </div>
         </div>
 
-        {!response ? (
+        {!opening ? (
           <div className="mt-8">
             <form
               onSubmit={(e) => {
@@ -154,23 +171,22 @@ export default function AuroraPage() {
               </div>
             )}
 
-            {/* Situation — Aurora reframes before answering, mascot as the consultant speaking */}
+            {/* Aurora speaks first — situation, then hypotheses, then a real question */}
             <div className="haven-surface rounded-2xl bg-star/15 px-6 py-6">
               <div className="flex items-start gap-3">
-                <Moon size={36} glow={false} />
+                <Moon size={36} />
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted">{t.auroraSituationLabel}</p>
-                  <p className="mt-2 font-serif text-xl leading-relaxed text-ink">{response.situation}</p>
+                  <p className="mt-2 font-serif text-xl leading-relaxed text-ink">{opening.situation}</p>
                 </div>
               </div>
             </div>
 
-            {/* Hypotheses — skipped once concrete options exist, since then the ambiguity is which option, not what the issue is */}
-            {response.hypotheses.length > 0 && (
+            {opening.hypotheses.length > 0 && (
               <div className="haven-surface rounded-2xl px-6 py-6">
                 <p className="text-xs uppercase tracking-wide text-muted">{t.auroraHypothesesLabel}</p>
                 <ul className="mt-3 space-y-2">
-                  {response.hypotheses.map((h) => (
+                  {opening.hypotheses.map((h) => (
                     <li key={h} className="flex gap-2 text-ink/90">
                       <span aria-hidden="true" className="text-accent-pink">
                         ✦
@@ -179,74 +195,112 @@ export default function AuroraPage() {
                     </li>
                   ))}
                 </ul>
-                <p className="mt-4 font-serif italic text-secondary">{response.rootCauseQuestion}</p>
               </div>
             )}
 
             <div className="haven-surface rounded-2xl px-6 py-5">
               <p className="text-xs uppercase tracking-wide text-muted">{t.auroraFrameworkLabel}</p>
-              <p className="mt-1 text-ink/90">{response.framework}</p>
+              <p className="mt-1 text-ink/90">{opening.framework}</p>
             </div>
 
-            {/* Options, if detected */}
-            {response.optionsDetected && (
+            {opening.optionsDetected && (
               <div className="haven-surface rounded-2xl px-6 py-5">
                 <p className="text-xs uppercase tracking-wide text-muted">{t.auroraOptionsLabel}</p>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {response.optionsDetected.map((opt) => (
+                  {opening.optionsDetected.map((opt) => (
                     <span key={opt} className="rounded-full bg-secondary/25 px-3 py-1 text-sm text-ink">
                       {opt}
                     </span>
                   ))}
                 </div>
-                <p className="mt-3 text-ink/90">{response.rootCauseQuestion}</p>
               </div>
             )}
 
-            <div className="haven-surface rounded-2xl px-6 py-6">
-              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraTradeoffsLabel}</p>
-              <ul className="mt-3 space-y-2">
-                {response.tradeoffs.map((c) => (
-                  <li key={c} className="flex gap-2 text-ink/90">
-                    <span aria-hidden="true" className="text-accent-pink">
-                      ✦
-                    </span>
-                    {c}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {/* Aurora waits for a real answer before continuing — the conversation actually pauses here */}
+            {!followUp ? (
+              <div className="haven-surface animate-rise rounded-2xl px-6 py-6">
+                <p className="font-serif italic text-secondary">{opening.rootCauseQuestion}</p>
+                <textarea
+                  value={rootCauseReply}
+                  onChange={(e) => setRootCauseReply(e.target.value)}
+                  placeholder={t.auroraReplyPlaceholder}
+                  rows={2}
+                  autoFocus
+                  className="mt-3 w-full resize-none rounded-xl bg-transparent text-ink placeholder:text-muted focus:outline-none"
+                />
+                <div className="mt-2 flex items-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => respondToRootCause(rootCauseReply)}
+                    disabled={!rootCauseReply.trim()}
+                    className={`haven-cta rounded-full px-5 py-2 text-sm ${
+                      rootCauseReply.trim()
+                        ? "bg-primary text-white hover:bg-primary-hover"
+                        : "cursor-not-allowed bg-line text-muted"
+                    }`}
+                  >
+                    {t.auroraContinue}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => respondToRootCause("")}
+                    className="text-sm text-muted hover:text-ink"
+                  >
+                    {t.auroraSkip}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {rootCauseReply.trim() && (
+                  <div className="haven-surface rounded-2xl px-6 py-5">
+                    <p className="text-xs uppercase tracking-wide text-muted">{t.auroraYourReplyLabel}</p>
+                    <p className="mt-1 text-ink/90">{rootCauseReply}</p>
+                  </div>
+                )}
 
-            <div className="haven-surface rounded-2xl bg-accent-pink/15 px-6 py-6">
-              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraRecommendationLabel}</p>
-              <p className="mt-2 text-ink">{response.recommendation}</p>
-            </div>
+                <div className="haven-surface rounded-2xl px-6 py-6">
+                  <p className="text-xs uppercase tracking-wide text-muted">{t.auroraTradeoffsLabel}</p>
+                  <ul className="mt-3 space-y-2">
+                    {followUp.tradeoffs.map((c) => (
+                      <li key={c} className="flex gap-2 text-ink/90">
+                        <span aria-hidden="true" className="text-accent-pink">
+                          ✦
+                        </span>
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-            <div className="haven-surface rounded-2xl px-6 py-6">
-              <p className="text-xs uppercase tracking-wide text-muted">{t.auroraActionPlanLabel}</p>
-              <ul className="mt-3 space-y-2">
-                {response.actionPlan.map((step, i) => (
-                  <li key={step} className="flex gap-3 text-ink/90">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs text-primary">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            </div>
+                <div className="haven-surface rounded-2xl bg-accent-pink/15 px-6 py-6">
+                  <p className="text-xs uppercase tracking-wide text-muted">{t.auroraRecommendationLabel}</p>
+                  <p className="mt-2 text-ink">{followUp.recommendation}</p>
+                </div>
 
-            <p className="text-center font-serif italic text-secondary">{response.reflectionPrompt}</p>
+                <div className="haven-surface rounded-2xl px-6 py-6">
+                  <p className="text-xs uppercase tracking-wide text-muted">{t.auroraActionPlanLabel}</p>
+                  <ul className="mt-3 space-y-2">
+                    {followUp.actionPlan.map((step, i) => (
+                      <li key={step} className="flex gap-3 text-ink/90">
+                        <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs text-primary">
+                          {i + 1}
+                        </span>
+                        {step}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
 
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={reset}
-                className="text-sm text-primary hover:opacity-70"
-              >
-                {t.auroraNewQuestion}
-              </button>
-            </div>
+                <p className="text-center font-serif italic text-secondary">{followUp.reflectionPrompt}</p>
+
+                <div className="flex justify-center">
+                  <button type="button" onClick={reset} className="text-sm text-primary hover:opacity-70">
+                    {t.auroraNewQuestion}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>

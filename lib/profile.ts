@@ -72,6 +72,16 @@ export function completeOnboarding(name: string): void {
   persist({ name: name.trim(), onboarded: true });
 }
 
+/**
+ * There's no real auth in this local-only prototype, so "sign out" means
+ * what it honestly can here: return to onboarding. It never touches
+ * memories or settings — only re-entering the app is required, nothing is
+ * deleted. (Full data deletion is a separate, explicit action on Me.)
+ */
+export function signOut(): void {
+  persist({ ...current, onboarded: false });
+}
+
 export function useProfile(): Profile {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }

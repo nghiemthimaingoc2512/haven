@@ -73,7 +73,7 @@ export default function MePage() {
   return (
     <div className="mx-auto w-full max-w-xl px-6 py-10">
       <div className="flex items-center gap-3">
-        <Moon size={40} glow={false} />
+        <Moon size={40} priority />
         <h1 className="font-serif text-3xl text-ink">{t.navMe}</h1>
       </div>
 

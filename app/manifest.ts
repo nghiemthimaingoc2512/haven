@@ -8,16 +8,16 @@ export default function manifest(): MetadataRoute.Manifest {
       "A place to say the thing you haven't said yet, and be understood, not managed.",
     start_url: "/",
     display: "standalone",
-    background_color: "#fcfbff",
-    theme_color: "#a49af9",
+    background_color: "#faf8ff",
+    theme_color: "#8b5cf6",
     icons: [
       {
-        src: "/icon",
-        sizes: "32x32",
+        src: "/icon.png",
+        sizes: "128x128",
         type: "image/png",
       },
       {
-        src: "/apple-icon",
+        src: "/apple-icon.png",
         sizes: "180x180",
         type: "image/png",
       },

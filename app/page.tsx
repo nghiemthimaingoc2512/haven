@@ -83,7 +83,7 @@ export default function OnboardingPage() {
 
         {step === "name" && (
           <div className="flex flex-col items-center">
-            <Moon size={72} />
+            <Moon size={72} priority />
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {t.onboardingNameTitle}
             </h1>
@@ -184,7 +184,7 @@ export default function OnboardingPage() {
 
         {step === "home" && (
           <div className="flex flex-col items-center">
-            <Moon size={104} sway />
+            <Moon size={104} sway priority />
             <h1 className="mt-6 font-serif text-3xl text-ink">
               {t.welcomeHomeGreeting}
             </h1>

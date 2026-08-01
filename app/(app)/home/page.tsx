@@ -5,11 +5,10 @@ import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
 import { useProfile } from "@/lib/profile";
 import { useMemories } from "@/lib/storage";
-import { useDayPeriod, computeStreak, getWeeklySummary } from "@/lib/insights";
+import { useDayPeriod, computeStreak, getWeeklySummary, getWhisperGreeting } from "@/lib/insights";
 import { getTide, useDailyQuote } from "@/lib/tides";
-import { computeStarPosition } from "@/lib/constellation";
+import { computeMiniTrail } from "@/lib/constellation";
 import { getEmotionLabel, EMOTION_TAXONOMY } from "@/lib/emotions";
-import { useDreamJournal, saveDreamJournal } from "@/lib/dreamJournal";
 import { Moon } from "@/components/mascot/Moon";
 import { EmotionBadge } from "@/components/EmotionBadge";
 import { EmotionInsights } from "@/components/EmotionInsights";
@@ -34,10 +33,7 @@ export default function HomePage() {
   const quote = useDailyQuote(lang);
   const tide = getTide(latest?.emotion ?? null, lang);
   const weekly = getWeeklySummary(memories);
-  const dreamNote = useDreamJournal();
   const [showBreathing, setShowBreathing] = useState(false);
-  const [showDreamInput, setShowDreamInput] = useState(false);
-  const [dreamDraft, setDreamDraft] = useState(dreamNote);
 
   const greeting = {
     morning: t.homeGreetingMorning,
@@ -46,10 +42,11 @@ export default function HomePage() {
     night: t.homeGreetingNight,
   }[period];
 
-  const previewStars = memories.slice(0, 6).map((m) => ({
-    memory: m,
-    pos: computeStarPosition(m),
-  }));
+  // A real callback to the last conversation when there's one worth making —
+  // never a random line. Falls back to the plain time-of-day greeting below.
+  const whisperGreeting = getWhisperGreeting(memories, lang);
+
+  const previewTrail = computeMiniTrail(memories);
 
   return (
     <div className={`min-h-full ${isNight ? "haven-night-sky" : ""}`}>
@@ -79,33 +76,32 @@ export default function HomePage() {
               </div>
             </>
           )}
-          <Moon size={88} sway priority />
-          <p className="mt-5 font-serif text-3xl text-ink">
-            {greeting}
-            {profile.name ? `, ${profile.name}` : ""}.
-          </p>
-          <p className="mt-1 text-secondary">
-            {isNight ? t.nightWindDown : ""} {t.heroQuestion}
-          </p>
+          <Moon size={104} sway priority />
+          {whisperGreeting ? (
+            <p className="mt-5 font-serif text-2xl leading-relaxed text-ink">
+              {profile.name ? `${profile.name}, ` : ""}
+              {whisperGreeting}
+            </p>
+          ) : (
+            <>
+              <p className="mt-5 font-serif text-3xl text-ink">
+                {greeting}
+                {profile.name ? `, ${profile.name}` : ""}.
+              </p>
+              <p className="mt-1 text-secondary">
+                {isNight ? t.nightWindDown : ""} {t.heroQuestion}
+              </p>
+            </>
+          )}
         </div>
 
-        {/* Two companions, always both visible — Haven is never a single AI */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <Link
-            href="/talk"
-            className="haven-surface animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
-          >
-            <p className="font-serif text-lg text-ink">{t.navTalk}</p>
-            <p className="mt-1 text-sm text-muted">{t.homeWhisperCardBody}</p>
-          </Link>
-          <Link
-            href="/discover"
-            className="haven-aurora animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
-          >
-            <p className="font-serif text-lg text-ink">{t.navDiscover}</p>
-            <p className="mt-1 text-sm text-ink/70">{t.homeAuroraCardBody}</p>
-          </Link>
-        </div>
+        {/* Whisper's Home: the conversation comes before anything else */}
+        <Link
+          href="/talk"
+          className="haven-cta animate-rise mt-4 flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-center font-serif text-lg text-white hover:bg-primary-hover"
+        >
+          {t.homeContinueConversation}
+        </Link>
 
         {isNight ? (
           <>
@@ -124,21 +120,12 @@ export default function HomePage() {
               </button>
 
               <Link
-                href="/story"
+                href="/memory"
                 className="haven-surface animate-rise rounded-2xl px-6 py-6 transition-transform hover:-translate-y-0.5"
               >
                 <span className="text-sm text-muted">🌌</span>
                 <p className="mt-2 font-serif text-lg text-ink">{t.nightReadMemories}</p>
               </Link>
-
-              <button
-                type="button"
-                onClick={() => setShowDreamInput((v) => !v)}
-                className="haven-surface animate-rise rounded-2xl px-6 py-6 text-left transition-transform hover:-translate-y-0.5"
-              >
-                <span className="text-sm text-muted">💭</span>
-                <p className="mt-2 font-serif text-lg text-ink">{t.nightDreamJournal}</p>
-              </button>
 
               <Link
                 href="/talk"
@@ -149,19 +136,6 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {showDreamInput && (
-              <div className="haven-surface animate-rise mt-4 rounded-2xl px-6 py-5">
-                <textarea
-                  value={dreamDraft}
-                  onChange={(e) => setDreamDraft(e.target.value)}
-                  onBlur={() => saveDreamJournal(dreamDraft)}
-                  rows={3}
-                  placeholder={t.nightDreamJournal}
-                  className="w-full resize-none rounded-xl bg-transparent text-ink placeholder:text-muted focus:outline-none"
-                />
-              </div>
-            )}
-
             <p className="animate-rise mt-6 text-center text-sm text-secondary">
               {t.breatheTogetherLine}
             </p>
@@ -169,7 +143,25 @@ export default function HomePage() {
         ) : (
           <>
             {/* Today's Tide */}
-            <div className={`haven-surface animate-rise mt-6 rounded-2xl px-6 py-6 ${TIDE_BG[tide.color]}`}>
+            {/* Memory from previous days — a real callback, not a widget */}
+            {latest ? (
+              <Link
+                href="/memory"
+                className="haven-surface animate-rise mt-4 block rounded-2xl px-6 py-6 transition-transform hover:-translate-y-0.5"
+              >
+                <span className="text-sm text-muted">🌌 {t.savedMemory}</span>
+                <p className="mt-2 line-clamp-2 font-serif text-lg text-ink">{latest.reflection}</p>
+              </Link>
+            ) : (
+              <div className="haven-surface animate-rise mt-4 flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
+                <Moon size={56} />
+                <p className="font-serif text-lg text-ink">{t.emptyMemoriesTitle}</p>
+                <p className="text-sm text-muted">{t.emptyMemoriesBody}</p>
+              </div>
+            )}
+
+            {/* Today's Story */}
+            <div className={`haven-surface animate-rise mt-4 rounded-2xl px-6 py-6 ${TIDE_BG[tide.color]}`}>
               <p className="text-xs uppercase tracking-wide text-muted">{t.todaysTide}</p>
               <p className="mt-2 font-serif text-2xl text-ink">{tide.name}</p>
               <p className="mt-1 text-sm text-ink/80">{tide.description}</p>
@@ -183,37 +175,6 @@ export default function HomePage() {
               <p className="text-xs uppercase tracking-wide text-muted">✨ {t.glowOfDay}</p>
               <p className="mt-2 font-serif text-lg leading-relaxed text-ink">{tide.glow}</p>
             </div>
-
-            {/* Continue Your Journey */}
-            <p className="mt-8 text-xs uppercase tracking-wide text-muted">{t.continueJourney}</p>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <Link
-                href="/talk"
-                className="haven-surface animate-rise rounded-2xl px-6 py-6 transition-transform hover:-translate-y-0.5"
-              >
-                <span className="text-sm text-muted">💬 {t.lastConversation}</span>
-                <p className="mt-2 font-serif text-lg text-ink">{t.homeQuickTalk}</p>
-              </Link>
-              <Link
-                href="/story"
-                className="haven-surface animate-rise rounded-2xl px-6 py-6 transition-transform hover:-translate-y-0.5"
-              >
-                <span className="text-sm text-muted">🌌 {t.savedMemory}</span>
-                {latest ? (
-                  <p className="mt-2 line-clamp-2 font-serif text-lg text-ink">{latest.reflection}</p>
-                ) : (
-                  <p className="mt-2 font-serif text-lg text-ink">{t.emptyMemoriesTitle}</p>
-                )}
-              </Link>
-            </div>
-
-            {!latest && (
-              <div className="haven-surface animate-rise mt-6 flex flex-col items-center gap-3 rounded-2xl px-6 py-8 text-center">
-                <Moon size={56} />
-                <p className="font-serif text-lg text-ink">{t.emptyMemoriesTitle}</p>
-                <p className="text-sm text-muted">{t.emptyMemoriesBody}</p>
-              </div>
-            )}
 
             {/* Weekly Reflection */}
             {weekly.count > 0 && (
@@ -239,8 +200,26 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Constellation Preview */}
-            {previewStars.length > 0 && (
+            {/* The other world — reachable, but never competing with the conversation above */}
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/talk"
+                className="haven-surface animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
+              >
+                <p className="font-serif text-lg text-ink">{t.navTalk}</p>
+                <p className="mt-1 text-sm text-muted">{t.homeWhisperCardBody}</p>
+              </Link>
+              <Link
+                href="/discover"
+                className="haven-aurora animate-rise rounded-2xl px-5 py-4 transition-transform hover:-translate-y-0.5"
+              >
+                <p className="font-serif text-lg text-ink">{t.navDiscover}</p>
+                <p className="mt-1 text-sm text-ink/70">{t.homeAuroraCardBody}</p>
+              </Link>
+            </div>
+
+            {/* Universe Preview — a short stretch of the same winding path, not scattered dots */}
+            {previewTrail.length > 0 && (
               <Link
                 href="/story"
                 className="haven-surface animate-rise mt-4 block rounded-2xl px-6 py-5 transition-transform hover:-translate-y-0.5"
@@ -249,8 +228,16 @@ export default function HomePage() {
                   🌌 {t.constellationPreviewLabel}
                 </p>
                 <svg viewBox="0 0 100 30" className="mt-3 h-10 w-full">
-                  {previewStars.map(({ memory, pos }) => (
-                    <circle key={memory.id} cx={pos.x} cy={(pos.y / 100) * 30} r="1.4" className="fill-star" />
+                  <polyline
+                    points={previewTrail.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="none"
+                    className="stroke-star"
+                    strokeWidth="0.6"
+                    strokeLinecap="round"
+                    opacity="0.6"
+                  />
+                  {previewTrail.map((p) => (
+                    <circle key={p.memory.id} cx={p.x} cy={p.y} r="1.4" className="fill-star" />
                   ))}
                 </svg>
               </Link>

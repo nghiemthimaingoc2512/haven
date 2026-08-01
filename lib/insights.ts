@@ -140,6 +140,36 @@ export function getAverageMood(memories: Memory[], days = 30): number | null {
   return valences.reduce((a, b) => a + b, 0) / valences.length;
 }
 
+/**
+ * A greeting derived from the actual last conversation — never a random
+ * pick. Returns null when there's no meaningful callback to make (no
+ * memories yet, or the gap since last time is too ordinary to remark on),
+ * in which case the caller falls back to the plain time-of-day greeting.
+ */
+export function getWhisperGreeting(memories: Memory[], lang: Lang): string | null {
+  if (memories.length === 0) return null;
+  const latest = memories[0];
+  const daysSince = Math.floor((Date.now() - new Date(latest.createdAt).getTime()) / 86_400_000);
+  const topic = latest.topics[0];
+
+  if (daysSince === 0) {
+    return lang === "vi"
+      ? "Mình vẫn đang nghĩ về điều bạn vừa chia sẻ lúc nãy."
+      : "I'm still thinking about what you shared earlier.";
+  }
+  if (daysSince === 1 && topic) {
+    return lang === "vi"
+      ? `Hôm qua bạn có nhắc đến ${topic}. Hôm nay thế nào rồi?`
+      : `Yesterday you mentioned ${topic}. How's it going today?`;
+  }
+  if (daysSince >= 3) {
+    return lang === "vi"
+      ? "Lâu rồi mình chưa nghe tin bạn. Dạo này thế nào?"
+      : "It's been a little while since I heard from you. How have you been?";
+  }
+  return null;
+}
+
 /** A friendly icon + label for a valence score — never the raw number, which would read as clinical. */
 export function describeValence(avg: number | null, lang: Lang): { icon: string; label: string } {
   if (avg === null) return { icon: "🤍", label: lang === "vi" ? "Chưa có dữ liệu" : "Not enough data yet" };
