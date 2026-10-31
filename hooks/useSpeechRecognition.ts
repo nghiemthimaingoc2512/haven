@@ -33,7 +33,8 @@ export type SpeechRecognitionStatus =
 
 interface UseSpeechRecognitionOptions {
   locale?: string;
-  onFinalResult?: (text: string) => void;
+  /** `alternatives` are the recognizer's other readings, best first (includes `text`). */
+  onFinalResult?: (text: string, alternatives: string[]) => void;
   onInterimResult?: (text: string) => void;
 }
 
@@ -91,6 +92,7 @@ export function useSpeechRecognition({
     const recognition = new Ctor();
     recognition.continuous = true;
     recognition.interimResults = true;
+    recognition.maxAlternatives = 4;
     recognition.lang = localeRef.current;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -100,7 +102,8 @@ export function useSpeechRecognition({
         const text = result[0]?.transcript ?? "";
         if (result.isFinal) {
           const trimmed = text.trim();
-          if (trimmed) onFinalResultRef.current?.(trimmed);
+          const alternatives = Array.from({ length: result.length }, (_, k) => result[k]?.transcript ?? "");
+          if (trimmed) onFinalResultRef.current?.(trimmed, alternatives);
         } else {
           interim += text;
         }

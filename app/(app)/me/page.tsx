@@ -5,6 +5,7 @@ import { useLanguage, type Lang } from "@/lib/i18n";
 import { useProfile, updateName, resetProfile } from "@/lib/profile";
 import { useTheme, setTheme, resetTheme, type ThemePreference } from "@/lib/theme";
 import { getAllMemories, useMemories, resetMemoriesCache } from "@/lib/storage";
+import { activeCorrections, readLearned, writeLearned } from "@/lib/mind/speech";
 import { Moon } from "@/components/mascot/Moon";
 import { EmotionInsights } from "@/components/EmotionInsights";
 
@@ -38,6 +39,8 @@ export default function MePage() {
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState(profile.name);
+  // The (app) layout only renders after hydration, so localStorage is safe here.
+  const [learned, setLearned] = useState(() => readLearned(lang));
 
   const themeLabel: Record<ThemePreference, string> = {
     light: t.themeLight,
@@ -58,6 +61,13 @@ export default function MePage() {
     // Revoking synchronously cancels the download in Firefox/Safari.
     window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
     setExported(true);
+  };
+
+  const forgetCorrection = (heard: string) => {
+    const next = { ...readLearned(lang) };
+    delete next[heard];
+    writeLearned(lang, next);
+    setLearned(next);
   };
 
   const handleSaveName = () => {
@@ -178,6 +188,26 @@ export default function MePage() {
         <p className="mt-3 text-sm text-secondary">
           <span className="font-serif text-xl text-ink">{memories.length}</span> {t.meMemoryCount}
         </p>
+      </SettingCard>
+
+      <SettingCard label={t.meSpeechLearned}>
+        <p className="mt-2 text-ink/90">{t.meSpeechLearnedBody}</p>
+        {activeCorrections(learned).length === 0 ? (
+          <p className="mt-3 text-sm text-muted">{t.meSpeechLearnedEmpty}</p>
+        ) : (
+          <ul className="mt-3 space-y-2">
+            {activeCorrections(learned).map(({ heard, to }) => (
+              <li key={heard} className="flex items-center justify-between gap-3 text-sm text-ink">
+                <span className="min-w-0 break-words">
+                  <span className="text-muted line-through">{heard}</span> → {to}
+                </span>
+                <button type="button" onClick={() => forgetCorrection(heard)} className="shrink-0 text-xs text-muted hover:text-signal">
+                  {t.meSpeechForget}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </SettingCard>
 
       <div className="mt-4">

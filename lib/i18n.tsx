@@ -34,6 +34,11 @@ export interface Copy {
   voiceModeLabel: string;
   textModeLabel: string;
   openInBrowser: string;
+  speechFixHint: string;
+  meSpeechLearned: string;
+  meSpeechLearnedBody: string;
+  meSpeechLearnedEmpty: string;
+  meSpeechForget: string;
   statusIdle: string;
   statusListening: string;
   statusPaused: string;
@@ -197,6 +202,11 @@ const dictionary: Record<Lang, Copy> = {
     voiceModeLabel: "Nói",
     textModeLabel: "Gõ chữ",
     openInBrowser: "Mở trong trình duyệt",
+    speechFixHint: "Nghe sai từ nào? Sửa ngay trong ô trên rồi gửi, lần sau Haven sẽ nhớ.",
+    meSpeechLearned: "Từ Haven đã học khi nghe bạn nói",
+    meSpeechLearnedBody: "Khi bạn sửa lại chữ sau lúc nói, Haven ghi nhớ để lần sau tự sửa. Danh sách này chỉ nằm trên thiết bị của bạn.",
+    meSpeechLearnedEmpty: "Chưa có từ nào.",
+    meSpeechForget: "Quên từ này",
     statusIdle: "Chạm vào micro để nói.",
     statusListening: "Đang lắng nghe…",
     statusPaused: "Tạm dừng - chạm micro để nói tiếp.",
@@ -362,6 +372,11 @@ const dictionary: Record<Lang, Copy> = {
     voiceModeLabel: "Speak",
     textModeLabel: "Type",
     openInBrowser: "Open in browser",
+    speechFixHint: "Misheard a word? Fix it in the box above before sending, and Haven will remember.",
+    meSpeechLearned: "Words Haven learned from your voice",
+    meSpeechLearnedBody: "When you correct text after speaking, Haven remembers and fixes it next time. This list stays on your device.",
+    meSpeechLearnedEmpty: "Nothing yet.",
+    meSpeechForget: "Forget this",
     statusIdle: "Tap the microphone to speak.",
     statusListening: "Listening…",
     statusPaused: "Paused - tap the microphone to continue.",

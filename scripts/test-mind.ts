@@ -9,6 +9,7 @@ import { whisperReply, type Turn } from "../lib/mind/whisper";
 import { auroraReply, auroraSummary } from "../lib/mind/aurora";
 import { generateMemory } from "../lib/mind/memory";
 import { KNOWLEDGE } from "../lib/mind/knowledge";
+import { activeCorrections, correctTranscript, learnFromEdit, pickBestTranscript, type LearnedMap } from "../lib/mind/speech";
 
 let failed = 0;
 function test(name: string, fn: () => void) {
@@ -211,6 +212,53 @@ test("no content still yields a usable memory", () => {
   const m = generateMemory(["ừm"], "vi");
   assert.ok(m.reflection.length > 0);
   assert.equal(m.emotionKey, "neutral");
+});
+
+console.log("speech");
+test("the reported transcript comes back right", () => {
+  const heard =
+    "Mình đang test thử một sản phẩm mới mình Bill bằng aiibull Bill bằng ai không không phải Bill này nó là mình xây dựng bằng ai nha để phục vụ cho công việc làm có đáp un của mình";
+  const fixed = correctTranscript(heard, "vi");
+  console.log(`        > ${fixed}`);
+  assert.match(fixed, /mình Build bằng AI build Build bằng AI không/);
+  assert.match(fixed, /xây dựng bằng AI nha/);
+  assert.match(fixed, /công việc làm Product Owner của mình/);
+  assert.doesNotMatch(fixed, /Bill|có đáp un|aiibull/);
+});
+test("real words stay when the context doesn't support a fix", () => {
+  const same = (s: string) => assert.equal(correctTranscript(s, "vi"), s);
+  same("Hôm nay mình trả cái bill tiền điện rồi");
+  same("Không biết phải nói với ai bây giờ");
+  same("Mình buồn vì không có ai bên cạnh");
+  same("Không phải ai trong sản phẩm này cũng hiểu");
+});
+test("an alternative wins only when it's more plausible", () => {
+  assert.equal(pickBestTranscript(["hôm nay trời đẹp", "hôm nay trời đẹp quá"], "vi"), "hôm nay trời đẹp");
+  assert.equal(pickBestTranscript(["mình làm pờ rốt", "mình làm product owner"], "vi"), "mình làm product owner");
+});
+test("learns a correction the person makes", () => {
+  const learned = learnFromEdit("hôm nay mình họp với cờ lai en mới", "hôm nay mình họp với client mới", "vi", {});
+  assert.equal(activeCorrections(learned).length, 0); // not alike, not capitalised: wait for a repeat
+  const twice = learnFromEdit("gặp cờ lai en hôm qua", "gặp client hôm qua", "vi", learned);
+  assert.deepEqual(activeCorrections(twice), [{ heard: "cờ lai en", to: "client" }]);
+  assert.equal(correctTranscript("mình gọi cờ lai en", "vi", twice), "mình gọi client");
+});
+test("a sound-alike or capitalised term is trusted the first time", () => {
+  const a = learnFromEdit("mình dùng rê ắc cho dự án", "mình dùng React cho dự án", "vi", {});
+  assert.equal(correctTranscript("rê ắc khó quá", "vi", a), "React khó quá");
+  const b = learnFromEdit("mình làm sprin tuần này", "mình làm sprint tuần này", "vi", {});
+  assert.equal(correctTranscript("sprin này gấp", "vi", b), "sprint này gấp");
+});
+test("changing what you meant never becomes a rule", () => {
+  let l: LearnedMap = learnFromEdit("hôm nay mình buồn lắm", "hôm nay mình vui lắm", "vi", {});
+  assert.equal(correctTranscript("mình buồn", "vi", l), "mình buồn");
+  l = learnFromEdit("sếp mắng mình hôm nay", "hôm qua mẹ gọi cho mình lâu lắm", "vi", {});
+  assert.deepEqual(activeCorrections(l), []); // a rewrite isn't a correction
+  assert.equal(Object.keys(learnFromEdit("mình đi làm", "tôi đi làm", "vi", {})).length, 0); // function word
+});
+test("several fixes in one message are each learned", () => {
+  const l = learnFromEdit("mình Bill sản phẩm làm có đáp un ở công ty", "mình Build sản phẩm làm Product Owner ở công ty", "vi", {});
+  assert.deepEqual(activeCorrections(l).map((c) => c.to).sort(), ["Build", "Product Owner"]);
 });
 
 console.log(failed ? `\n${failed} failed` : "\nall passed");

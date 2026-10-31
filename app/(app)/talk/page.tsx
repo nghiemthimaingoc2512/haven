@@ -12,6 +12,7 @@ import { useProfile } from "@/lib/profile";
 import { saveMemory, createMemoryId, useMemories } from "@/lib/storage";
 import { whisperReply, talkStarters, type Turn } from "@/lib/mind/whisper";
 import { generateMemory } from "@/lib/mind/memory";
+import { correctTranscript, pickBestTranscript, readLearned, rememberEdit } from "@/lib/mind/speech";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/mascot/Moon";
 
@@ -141,15 +142,43 @@ function TalkPageInner() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
   const replyTimerRef = useRef<number | null>(null);
+  const textRef = useRef("");
+  // What the voice produced, before any hand edits - comparing it with what
+  // they finally keep is how Haven learns their corrections.
+  const heardRef = useRef<string | null>(null);
 
-  const appendFinal = useCallback((chunk: string) => {
-    setText((prev) => (prev ? `${prev} ${chunk}` : chunk));
-  }, []);
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
+
+  const commitLearning = useCallback(() => {
+    if (heardRef.current !== null) rememberEdit(heardRef.current, textRef.current, lang);
+    heardRef.current = null;
+  }, [lang]);
+
+  const appendFinal = useCallback(
+    (chunk: string, alternatives: string[]) => {
+      // Edits made before this new chunk are finished, so learn them now.
+      commitLearning();
+      const fixed = pickBestTranscript(alternatives.length ? alternatives : [chunk], lang, readLearned(lang));
+      const prev = textRef.current;
+      const next = prev ? `${prev} ${fixed}` : fixed;
+      textRef.current = next;
+      heardRef.current = next;
+      setText(next);
+    },
+    [commitLearning, lang],
+  );
+
+  const handleInterim = useCallback(
+    (chunk: string) => setInterimText(chunk ? correctTranscript(chunk, lang, readLearned(lang)) : ""),
+    [lang],
+  );
 
   const { status, start, pause, stop } = useSpeechRecognition({
     locale: speechLocale[lang],
     onFinalResult: appendFinal,
-    onInterimResult: setInterimText,
+    onInterimResult: handleInterim,
   });
 
   useEffect(() => {
@@ -183,6 +212,7 @@ function TalkPageInner() {
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    el.style.overflowY = el.scrollHeight > 200 ? "auto" : "hidden";
   }, [displayValue, mode]);
 
   useEffect(() => {
@@ -212,6 +242,7 @@ function TalkPageInner() {
 
   const handleClearDraft = () => {
     stop();
+    heardRef.current = null;
     setText("");
     setInterimText("");
     setElapsedSeconds(0);
@@ -226,6 +257,7 @@ function TalkPageInner() {
   const handleSendTurn = useCallback(() => {
     if (!canSend) return;
     stop();
+    commitLearning();
     const userText = text.trim();
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: userText }];
 
@@ -245,7 +277,7 @@ function TalkPageInner() {
       setIsReplying(false);
       replyTimerRef.current = null;
     }, Math.min(1400, 450 + reply.length * 6));
-  }, [canSend, text, stop, messages, lang, profile.name, memories]);
+  }, [canSend, text, stop, commitLearning, messages, lang, profile.name, memories]);
 
   // Ends the whole conversation - the real reflection pipeline runs on
   // everything that was actually said, not just the last line.
@@ -464,6 +496,7 @@ function TalkPageInner() {
                   </button>
                 </div>
                 <p className={`text-center text-xs ${showTroubleMessage ? "text-signal" : "text-muted"}`}>{statusCaption(status, t)}</p>
+                {hasContent && !showTroubleMessage && <p className="text-center text-xs text-muted">{t.speechFixHint}</p>}
               </div>
             ) : (
               <div className="mt-1 flex items-center justify-between gap-3">
