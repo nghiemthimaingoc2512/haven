@@ -581,7 +581,7 @@ export const KNOWLEDGE_VI: Knowledge = {
       "Chào bạn, mình ở đây. Hôm nay có gì mới không?",
     ],
     greetingReturning: [
-      "Chào bạn. Hôm trước bạn có kể về chuyện {topic} - dạo này sao rồi?",
+      "Chào bạn. Lần trước bạn có kể về chuyện {topic} - dạo này sao rồi?",
       "Mình đây. Chuyện {topic} hôm trước, có gì mới không?",
     ],
     thanks: [
@@ -651,7 +651,7 @@ export const KNOWLEDGE_VI: Knowledge = {
       "{person} xuất hiện khá nhiều trong chuyện bạn kể.",
     ],
     rememberPast: [
-      "Hôm trước bạn cũng có nhắc đến {topic}. Hai chuyện có liên quan gì nhau không?",
+      "Lần trước bạn cũng có nhắc đến {topic}. Hai chuyện có liên quan gì nhau không?",
       "Mình nhớ lần trước bạn kể về {topic}. Dạo này chuyện đó sao rồi?",
     ],
     decisionLead: [
