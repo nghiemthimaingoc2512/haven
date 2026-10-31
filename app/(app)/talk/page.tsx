@@ -9,15 +9,9 @@ import {
 } from "@/hooks/useSpeechRecognition";
 import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
 import { useProfile } from "@/lib/profile";
-import { generateReflection, getWhisperTurnReply, talkStarterPrompts } from "@/lib/reflection";
 import { saveMemory, createMemoryId, useMemories } from "@/lib/storage";
-import {
-  AiUnavailableError,
-  companionContext,
-  requestReflection,
-  streamCompanion,
-  type ChatMessage,
-} from "@/lib/ai/client";
+import { whisperReply, talkStarters, type Turn } from "@/lib/mind/whisper";
+import { generateMemory } from "@/lib/mind/memory";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/mascot/Moon";
 
@@ -25,6 +19,8 @@ type Mode = "voice" | "text";
 type Phase = "composing" | "ending";
 
 const DRAFT_KEY = "haven:talk:thread";
+
+type ChatMessage = Turn;
 
 function MicIcon({ className }: { className?: string }) {
   return (
@@ -119,11 +115,9 @@ export default function TalkPage() {
 }
 
 /**
- * Whisper is an ongoing conversation: each message is one turn, Whisper
- * replies (streamed from /api/whisper, falling back to the local rule
- * engine when the API isn't available), and the thread keeps going until
- * the user chooses to end it. Ending turns the whole transcript into one
- * saved memory via /api/reflect (same fallback), then shows it.
+ * Whisper is an ongoing conversation: each message is one turn, the local
+ * engine in lib/mind replies, and the thread keeps going until the user
+ * chooses to end it. Ending turns the whole transcript into one saved memory.
  */
 function TalkPageInner() {
   const { lang, t } = useLanguage();
@@ -138,8 +132,7 @@ function TalkPageInner() {
   // The (app) layout only renders children after hydration, so reading
   // sessionStorage in the initializer can't mismatch the server.
   const [messages, setMessages] = useState<ChatMessage[]>(readDraftThread);
-  const [streamingReply, setStreamingReply] = useState<string | null>(null);
-  const [errorLine, setErrorLine] = useState<string | null>(null);
+  const [isReplying, setIsReplying] = useState(false);
   const [text, setText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -147,7 +140,7 @@ function TalkPageInner() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
+  const replyTimerRef = useRef<number | null>(null);
 
   const appendFinal = useCallback((chunk: string) => {
     setText((prev) => (prev ? `${prev} ${chunk}` : chunk));
@@ -163,7 +156,12 @@ function TalkPageInner() {
     writeDraftThread(messages);
   }, [messages]);
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      if (replyTimerRef.current !== null) window.clearTimeout(replyTimerRef.current);
+    },
+    [],
+  );
 
   // recording duration ticks only while actually listening, and holds while paused
   useEffect(() => {
@@ -193,7 +191,7 @@ function TalkPageInner() {
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, streamingReply]);
+  }, [messages, isReplying]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (status === "listening") pause();
@@ -221,12 +219,11 @@ function TalkPageInner() {
 
   const wordCount = useMemo(() => text.trim().split(/\s+/).filter(Boolean).length, [text]);
   const hasContent = text.trim().length > 0;
-  const canSend = wordCount >= 1 && streamingReply === null;
+  const canSend = wordCount >= 1 && !isReplying;
   const hasConversation = messages.length > 0;
   const hasExchange = messages.some((m) => m.role === "assistant");
-  const isReplying = streamingReply !== null;
 
-  const handleSendTurn = useCallback(async () => {
+  const handleSendTurn = useCallback(() => {
     if (!canSend) return;
     stop();
     const userText = text.trim();
@@ -236,42 +233,23 @@ function TalkPageInner() {
     setText("");
     setInterimText("");
     setElapsedSeconds(0);
-    setErrorLine(null);
-    setStreamingReply("");
+    setIsReplying(true);
 
-    const controller = new AbortController();
-    abortRef.current = controller;
-
-    try {
-      const reply = await streamCompanion(
-        "/api/whisper",
-        { lang, messages: nextMessages, context: companionContext(profile.name, memories, lang) },
-        setStreamingReply,
-        controller.signal,
-      );
+    // The reply is instant; a short pause scaled to its length keeps it from feeling like a form.
+    const reply = whisperReply(nextMessages, lang, {
+      name: profile.name,
+      pastTopics: memories.slice(0, 5).flatMap((m) => m.topics.slice(0, 1)),
+    });
+    replyTimerRef.current = window.setTimeout(() => {
       setMessages([...nextMessages, { role: "assistant", content: reply }]);
-    } catch (err) {
-      if (err instanceof DOMException && err.name === "AbortError") return;
-      if (err instanceof AiUnavailableError && err.reason === "no_api_key") {
-        // No backend configured (local dev) - the old rule engine keeps the thread alive.
-        const userHistory = nextMessages.filter((m) => m.role === "user").map((m) => m.content);
-        const fallback = getWhisperTurnReply(userHistory, lang);
-        setMessages([...nextMessages, { role: "assistant", content: fallback.message }]);
-      } else {
-        // Hand the message back so nothing they wrote is lost.
-        setMessages(messages);
-        setText(userText);
-        setErrorLine(t.aiUnavailable);
-      }
-    } finally {
-      setStreamingReply(null);
-      abortRef.current = null;
-    }
-  }, [canSend, text, stop, messages, lang, profile.name, memories, t.aiUnavailable]);
+      setIsReplying(false);
+      replyTimerRef.current = null;
+    }, Math.min(1400, 450 + reply.length * 6));
+  }, [canSend, text, stop, messages, lang, profile.name, memories]);
 
   // Ends the whole conversation - the real reflection pipeline runs on
   // everything that was actually said, not just the last line.
-  const handleEndConversation = useCallback(async () => {
+  const handleEndConversation = useCallback(() => {
     stop();
     const pending = text.trim();
     const finalMessages: ChatMessage[] = pending ? [...messages, { role: "user", content: pending }] : messages;
@@ -279,45 +257,32 @@ function TalkPageInner() {
 
     setPhase("ending");
     setEndingStep("listening");
-    const stepTimer = window.setTimeout(() => setEndingStep("reflecting"), 1200);
 
     const transcript = finalMessages
       .map((m) => `${m.role === "user" ? (lang === "vi" ? "Bạn" : "You") : lang === "vi" ? "Thì Thầm" : "Whisper"}: ${m.content}`)
       .join("\n");
-    const userOnly = finalMessages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
+    const userOnly = finalMessages.filter((m) => m.role === "user").map((m) => m.content);
 
-    let generated;
-    try {
-      const result = await requestReflection(lang, finalMessages);
-      generated = { ...result, emotion: result.emotionKey };
-    } catch {
-      generated = generateReflection(userOnly, lang);
-    }
-    window.clearTimeout(stepTimer);
-
-    saveMemory({
-      id: createMemoryId(),
-      createdAt: new Date().toISOString(),
-      lang,
-      transcript,
-      reflection: generated.reflection,
-      standout: generated.standout,
-      emotion: generated.emotion,
-      emotionKey: generated.emotionKey,
-      intensity: generated.intensity,
-      confidence: generated.confidence,
-      topics: generated.topics,
-      people: generated.people,
-      source: "whisper",
-    });
-    writeDraftThread([]);
-    router.push("/reflection");
+    const generated = generateMemory(userOnly, lang);
+    window.setTimeout(() => setEndingStep("reflecting"), 800);
+    window.setTimeout(() => {
+      saveMemory({
+        id: createMemoryId(),
+        createdAt: new Date().toISOString(),
+        lang,
+        transcript,
+        ...generated,
+        source: "whisper",
+      });
+      writeDraftThread([]);
+      router.push("/reflection");
+    }, 1600);
   }, [messages, text, stop, lang, router]);
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      void handleSendTurn();
+      handleSendTurn();
     }
   };
 
@@ -383,7 +348,7 @@ function TalkPageInner() {
               <p className="animate-rise max-w-sm text-sm text-muted">{t.carryAloneLine}</p>
               {mode === "text" && !hasContent && (
                 <div className="flex w-full max-w-xl flex-wrap justify-center gap-2">
-                  {talkStarterPrompts(lang).map((prompt) => (
+                  {talkStarters(lang).map((prompt) => (
                     <button
                       key={prompt}
                       type="button"
@@ -417,7 +382,7 @@ function TalkPageInner() {
                 <div className="flex items-end gap-2 justify-start">
                   <Moon size={28} animate={false} />
                   <div className="haven-surface max-w-[85%] whitespace-pre-line rounded-2xl rounded-bl-md px-4 py-3 text-[1.02rem] leading-relaxed text-ink">
-                    {streamingReply ? streamingReply : <span className="text-sm italic text-muted">{t.talkTyping}</span>}
+                    <span className="text-sm italic text-muted">{t.talkTyping}</span>
                   </div>
                 </div>
               )}
@@ -428,14 +393,12 @@ function TalkPageInner() {
 
         {/* Composer */}
         <div className="sticky bottom-20 md:bottom-4">
-          {errorLine && <p className="mb-2 text-center text-sm text-signal">{errorLine}</p>}
-
           {hasExchange && (
             <div className="mb-2 flex items-center justify-end gap-2">
               <span className="hidden text-xs text-muted sm:inline">{t.finishReflectionHint}</span>
               <button
                 type="button"
-                onClick={() => void handleEndConversation()}
+                onClick={handleEndConversation}
                 disabled={isReplying}
                 className="haven-surface rounded-full px-4 py-2 text-sm text-primary transition-colors hover:bg-lavender/60 disabled:opacity-50"
               >
@@ -490,7 +453,7 @@ function TalkPageInner() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => void handleSendTurn()}
+                    onClick={handleSendTurn}
                     disabled={!canSend}
                     className={`haven-cta flex items-center gap-2 rounded-full px-4 py-2 text-sm ${
                       canSend ? "bg-primary text-white hover:bg-primary-hover" : "cursor-not-allowed bg-line text-muted"
@@ -515,7 +478,7 @@ function TalkPageInner() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => void handleSendTurn()}
+                    onClick={handleSendTurn}
                     disabled={!canSend}
                     className={`haven-cta flex items-center gap-2 rounded-full px-5 py-2.5 text-sm ${
                       canSend ? "bg-primary text-white hover:bg-primary-hover" : "cursor-not-allowed bg-line text-muted"

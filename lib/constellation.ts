@@ -38,7 +38,7 @@ export const CONSTELLATION_CATEGORIES: Record<ConstellationCategory, CategoryDef
   joy: { icon: "✨", labelVi: "Niềm vui", labelEn: "Joy", color: "lavender" },
 };
 
-// Real life-topic signal (from lib/reflection.ts's keyword detection) maps
+// Real life-topic signal (labels from lib/mind/knowledge.*.ts) maps
 // straight to a category. Not every topic has an obvious category - those
 // fall through to the emotion-based check below.
 const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
@@ -54,6 +54,16 @@ const TOPIC_TO_CATEGORY: Record<string, ConstellationCategory> = {
   future: "dreams",
   "cuộc sống": "growth",
   life: "growth",
+  "học tập": "growth",
+  study: "growth",
+  "bản thân": "growth",
+  self: "growth",
+  "thay đổi": "growth",
+  change: "growth",
+  "giấc ngủ": "health",
+  sleep: "health",
+  "bạn bè": "joy",
+  friend: "joy",
 };
 
 // When the topic doesn't resolve to a category, fall back to the memory's

@@ -34,7 +34,7 @@ function DiaryEntry({ memory, lang, t }: { memory: Memory; lang: Lang; t: Copy }
           />
         )}
       </div>
-      <p className="mt-3 font-serif text-lg leading-relaxed text-ink">{memory.reflection}</p>
+      <p className="mt-3 whitespace-pre-line font-serif text-lg leading-relaxed text-ink">{memory.reflection}</p>
       {memory.standout && <p className="mt-2 font-serif italic text-secondary">{memory.standout}</p>}
     </div>
   );

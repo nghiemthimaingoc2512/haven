@@ -29,7 +29,6 @@ export interface Copy {
   finishReflection: string;
   finishReflectionHint: string;
   talkTyping: string;
-  aiUnavailable: string;
   cancel: string;
   send: string;
   voiceModeLabel: string;
@@ -193,7 +192,6 @@ const dictionary: Record<Lang, Copy> = {
     finishReflection: "Kết thúc & lưu lại",
     finishReflectionHint: "Thì Thầm sẽ tóm tắt và giữ lại cuộc trò chuyện này.",
     talkTyping: "Thì Thầm đang viết…",
-    aiUnavailable: "Mình đang mất kết nối một chút. Bạn thử gửi lại giúp mình nhé.",
     cancel: "Xoá",
     send: "Gửi",
     voiceModeLabel: "Nói",
@@ -302,7 +300,7 @@ const dictionary: Record<Lang, Copy> = {
     meMemoryCount: "ký ức đã lưu",
     mePrivacy: "Quyền riêng tư",
     mePrivacyBody:
-      "Ký ức và cài đặt được lưu ngay trên thiết bị của bạn, không có tài khoản. Nội dung trò chuyện được gửi tới dịch vụ AI (Anthropic) chỉ để tạo phản hồi, không dùng cho mục đích nào khác.",
+      "Ký ức, cài đặt và cả phần xử lý trò chuyện đều chạy ngay trên thiết bị của bạn, không có tài khoản và không gửi nội dung về máy chủ nào. Riêng khi dùng giọng nói, trình duyệt có thể gửi âm thanh tới dịch vụ nhận dạng của nó. Haven chỉ đo lượt truy cập ẩn danh.",
     meExport: "Xuất dữ liệu",
     meExportDone: "Đã tải xuống.",
     meDeleteData: "Xoá toàn bộ dữ liệu",
@@ -359,7 +357,6 @@ const dictionary: Record<Lang, Copy> = {
     finishReflection: "End & save",
     finishReflectionHint: "Whisper will sum this up and keep it for you.",
     talkTyping: "Whisper is writing…",
-    aiUnavailable: "I lost the connection for a moment. Could you send that again?",
     cancel: "Clear",
     send: "Send",
     voiceModeLabel: "Speak",
@@ -468,7 +465,7 @@ const dictionary: Record<Lang, Copy> = {
     meMemoryCount: "memories saved",
     mePrivacy: "Privacy",
     mePrivacyBody:
-      "Memories and settings live on your device - there is no account. Conversation text is sent to an AI service (Anthropic) only to generate replies, and for nothing else.",
+      "Memories, settings and even the conversation processing all run on your device. There is no account and nothing you write is sent to a server. Only when you use voice may your browser send audio to its own speech service. Haven only counts anonymous visits.",
     meExport: "Export data",
     meExportDone: "Downloaded.",
     meDeleteData: "Delete all data",

@@ -80,7 +80,17 @@ const TIDE_COLOR: Record<string, Tide["color"]> = {
   "drifting-clouds": "muted",
 };
 
+// Keys are EmotionKey values; the older labels stay so memories saved before
+// the local engine still map to a tide.
 const EMOTION_TO_TIDE: Record<string, string> = {
+  overwhelmed: "quiet-sky",
+  worried: "gentle-waves",
+  angry: "drifting-clouds",
+  happy: "golden-sunrise",
+  hopeful: "golden-sunrise",
+  inspired: "golden-sunrise",
+  calm: "moonlit-calm",
+  peaceful: "moonlit-calm",
   "kiệt sức": "quiet-sky",
   exhausted: "quiet-sky",
   "buồn bã": "drifting-clouds",
