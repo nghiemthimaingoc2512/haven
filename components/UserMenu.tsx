@@ -56,12 +56,12 @@ export function UserMenu() {
               {t.navProfile}
             </Link>
             <Link
-              href="/me"
+              href="/memory"
               role="menuitem"
               onClick={() => setOpen(false)}
               className="block px-4 py-2.5 text-sm text-ink hover:bg-line/60"
             >
-              {t.navSettings}
+              {t.memoryTitle}
             </Link>
             <div className="my-1 border-t border-line" />
             <button

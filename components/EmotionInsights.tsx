@@ -1,3 +1,5 @@
+"use client";
+
 import { useLanguage } from "@/lib/i18n";
 import type { Memory } from "@/lib/storage";
 import {
@@ -7,7 +9,7 @@ import {
   getMoodCalendar,
   getMoodTrend,
 } from "@/lib/insights";
-import { EMOTION_TAXONOMY } from "@/lib/emotions";
+import { EMOTION_TAXONOMY, getEmotionLabel } from "@/lib/emotions";
 
 function trendBarColor(avgValence: number | null): string {
   if (avgValence === null) return "bg-line";
@@ -77,7 +79,7 @@ export function EmotionInsights({ memories, compact = false }: EmotionInsightsPr
                 className={`flex aspect-square items-center justify-center rounded-md text-xs ${
                   cell.emotionKey ? "bg-line" : "bg-line/30"
                 }`}
-                title={`${cell.day}${cell.emotionKey ? ` - ${EMOTION_TAXONOMY[cell.emotionKey].labelEn}` : ""}`}
+                title={`${cell.day}${cell.emotionKey ? ` - ${getEmotionLabel(cell.emotionKey, lang)}` : ""}`}
               >
                 {cell.emotionKey ? EMOTION_TAXONOMY[cell.emotionKey].icon : ""}
               </div>

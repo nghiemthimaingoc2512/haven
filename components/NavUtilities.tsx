@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/lib/i18n";
-import { useTheme, setTheme } from "@/lib/theme";
+import { useTheme, setTheme, useIsDarkTheme } from "@/lib/theme";
 import { Moon } from "@/components/mascot/Moon";
 
 function GlobeIcon() {
@@ -70,7 +70,9 @@ export function NavUtilities() {
   const { lang, setLang, t } = useLanguage();
   const theme = useTheme();
   const [aboutOpen, setAboutOpen] = useState(false);
-  const isDark = theme === "dark";
+  // Under "system" the visible theme is whatever the OS says - the toggle has
+  // to flip from that, or the first click on a dark OS does nothing visible.
+  const isDark = useIsDarkTheme(theme);
 
   return (
     <div className="flex items-center gap-1">

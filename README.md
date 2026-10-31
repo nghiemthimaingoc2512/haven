@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Haven
 
-## Getting Started
+An AI companion for reflection, emotional clarity and personal growth. Two companions live inside it: **Whisper** (Thì Thầm) listens to your everyday, **Aurora** (Cực Quang) helps you think clearly when you need to decide.
 
-First, run the development server:
+Live: https://havenmind-ai.vercel.app
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env.local   # add your ANTHROPIC_API_KEY
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## AI setup
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Whisper and Aurora reply through Claude via three route handlers:
 
-## Learn More
+| Route | What it does |
+| --- | --- |
+| `POST /api/whisper` | One Whisper turn, streamed as plain text |
+| `POST /api/aurora` | One Aurora turn (or the closing summary with `mode: "summarize"`), streamed |
+| `POST /api/reflect` | Turns a finished conversation into one saved memory (structured JSON) |
 
-To learn more about Next.js, take a look at the following resources:
+Prompts live in `lib/ai/prompts.ts`; the shared server glue in `lib/ai/server.ts`; the browser callers in `lib/ai/client.ts`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Environment variables (see `.env.example`):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `ANTHROPIC_API_KEY` – required for real replies. Without it every route answers `503 no_api_key` and the app falls back to the old keyword engine in `lib/reflection.ts` / `lib/aurora.ts`, so local development still works.
+- `HAVEN_AI_MODEL` – optional, defaults to `claude-opus-5-5`. Set `claude-sonnet-5-5` or `claude-haiku-5-5` to lower cost.
 
-## Deploy on Vercel
+On Vercel, add the variables under **Project → Settings → Environment Variables** and redeploy.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Data
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+There is no account and no database. Memories, profile and settings live in the browser's `localStorage`; an in-progress conversation lives in `sessionStorage` until it is ended and saved. Conversation text is sent to Anthropic only to generate replies.
+
+## Scripts
+
+- `npm run dev` – development server
+- `npm run build` – production build (also typechecks)
+- `npm run lint` – ESLint
+- `npm run brand:derive` – regenerate mascot/brand assets from `docs/brand`

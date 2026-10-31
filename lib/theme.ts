@@ -67,5 +67,34 @@ export function useTheme(): ThemePreference {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
+const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+function subscribeToSystemDark(callback: () => void): () => void {
+  const mq = window.matchMedia(DARK_QUERY);
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+/** Whether the page is actually dark right now - resolves "system" against the OS. */
+export function useIsDarkTheme(theme: ThemePreference): boolean {
+  const systemDark = useSyncExternalStore(
+    subscribeToSystemDark,
+    () => window.matchMedia(DARK_QUERY).matches,
+    () => false,
+  );
+  return theme === "dark" || (theme === "system" && systemDark);
+}
+
+/**
+ * Forget the in-memory preference after storage was wiped ("delete all
+ * data"), so the next read starts from the default instead of a stale cache.
+ */
+export function resetTheme(): void {
+  current = DEFAULT_THEME;
+  hydrated = false;
+  applyToDom(DEFAULT_THEME);
+  notify();
+}
+
 /** Inlined into a pre-hydration <script> in app/layout.tsx - keep in sync with readStoredTheme/applyToDom above. */
 export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${STORAGE_KEY}");if(t==="light"||t==="dark")document.documentElement.setAttribute("data-theme",t)}catch(e){}})()`;

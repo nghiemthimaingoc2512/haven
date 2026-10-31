@@ -18,9 +18,20 @@ export interface Memory {
   confidence?: number;
   topics: string[];
   people: string[];
+  // optional: which companion the memory came from (absent = Whisper)
+  source?: "whisper" | "aurora";
 }
 
 const STORAGE_KEY = "haven:memories:v1";
+
+/**
+ * Drop the in-memory snapshot cache after storage was wiped, so the next
+ * read doesn't hand back the stale parsed array.
+ */
+export function resetMemoriesCache(): void {
+  cachedRaw = undefined;
+  cachedParsed = [];
+}
 
 function isMemory(value: unknown): value is Memory {
   if (!value || typeof value !== "object") return false;

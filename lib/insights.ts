@@ -5,17 +5,22 @@ import type { Memory } from "@/lib/storage";
 import type { Lang } from "@/lib/i18n";
 import { EMOTION_VALENCE, type EmotionKey } from "@/lib/emotions";
 
-export type DayPeriod = "morning" | "afternoon" | "evening" | "night";
+export type DayPeriod = "morning" | "noon" | "afternoon" | "evening" | "night";
 
+// Vietnamese splits the day one step finer than English: 11:00-13:59 is
+// "buổi trưa", which "buổi chiều" (afternoon) would get wrong.
 function periodFromHour(hour: number): DayPeriod {
-  if (hour >= 6 && hour < 11) return "morning";
-  if (hour >= 11 && hour < 17) return "afternoon";
-  if (hour >= 17 && hour < 21) return "evening";
+  if (hour >= 5 && hour < 11) return "morning";
+  if (hour >= 11 && hour < 14) return "noon";
+  if (hour >= 14 && hour < 18) return "afternoon";
+  if (hour >= 18 && hour < 22) return "evening";
   return "night";
 }
 
-function subscribeNever(): () => void {
-  return () => {};
+// Re-check once a minute so a tab left open crosses into the next period.
+function subscribeToClock(callback: () => void): () => void {
+  const id = window.setInterval(callback, 60_000);
+  return () => window.clearInterval(id);
 }
 
 function getPeriodSnapshot(): DayPeriod {
@@ -31,7 +36,7 @@ function getServerPeriodSnapshot(): DayPeriod {
 /** The visitor's local time-of-day period, resolved client-side only. */
 export function useDayPeriod(): DayPeriod {
   return useSyncExternalStore(
-    subscribeNever,
+    subscribeToClock,
     getPeriodSnapshot,
     getServerPeriodSnapshot,
   );

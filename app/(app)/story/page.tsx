@@ -210,8 +210,7 @@ export default function StoryPage() {
                           <span className="font-serif text-lg text-ink">{getCategoryLabel(summary.category, lang)}</span>
                         </div>
                         <p className="mt-1 text-xs text-muted">
-                          {summary.count} {t.constellationMilestoneStars} · {t.constellationGrowthSince}{" "}
-                          {formatDayOnly(summary.firstDate, lang)}
+                          {summary.count} {t.constellationGrowthSince} {formatDayOnly(summary.firstDate, lang)}
                         </p>
                         {summary.dominantEmotion && (
                           <div className="mt-2">
@@ -226,8 +225,9 @@ export default function StoryPage() {
               </div>
             )}
 
-            {/* Category filter - only shown once there's real variety to it; dims the path, never removes it */}
-            {activeCategories.size >= MIN_CATEGORIES_FOR_FILTER && (
+            {/* Category filter - shown once there's variety, or whenever a
+                filter is active so "All" is always reachable; dims the path, never removes it */}
+            {(activeCategories.size >= MIN_CATEGORIES_FOR_FILTER || filter !== "all") && (
               <div className="mt-4 flex flex-wrap gap-2">
                 <button
                   type="button"

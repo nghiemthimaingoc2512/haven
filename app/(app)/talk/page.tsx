@@ -1,37 +1,34 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useSpeechRecognition,
   type SpeechRecognitionStatus,
 } from "@/hooks/useSpeechRecognition";
 import { useLanguage, speechLocale, type Copy } from "@/lib/i18n";
+import { useProfile } from "@/lib/profile";
 import { generateReflection, getWhisperTurnReply, talkStarterPrompts } from "@/lib/reflection";
-import { saveMemory, createMemoryId } from "@/lib/storage";
+import { saveMemory, createMemoryId, useMemories } from "@/lib/storage";
+import {
+  AiUnavailableError,
+  companionContext,
+  requestReflection,
+  streamCompanion,
+  type ChatMessage,
+} from "@/lib/ai/client";
 import { Waveform } from "@/components/Waveform";
 import { Moon } from "@/components/mascot/Moon";
 
 type Mode = "voice" | "text";
 type Phase = "composing" | "ending";
 
-interface Message {
-  role: "user" | "whisper";
-  text: string;
-}
+const DRAFT_KEY = "haven:talk:thread";
 
 function MicIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
       <rect x="9" y="2" width="6" height="12" rx="3" />
       <path d="M5 10a7 7 0 0 0 14 0" />
       <line x1="12" y1="19" x2="12" y2="22" />
@@ -41,16 +38,7 @@ function MicIcon({ className }: { className?: string }) {
 
 function PauseIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className={className} aria-hidden="true">
       <line x1="9" y1="6" x2="9" y2="18" />
       <line x1="15" y1="6" x2="15" y2="18" />
     </svg>
@@ -59,40 +47,17 @@ function PauseIcon({ className }: { className?: string }) {
 
 function KeyboardIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" className={className} aria-hidden="true">
       <rect x="2" y="6" width="20" height="12" rx="2" />
-      <line x1="6" y1="10" x2="6" y2="10" />
-      <line x1="10" y1="10" x2="10" y2="10" />
-      <line x1="14" y1="10" x2="14" y2="10" />
-      <line x1="18" y1="10" x2="18" y2="10" />
-      <line x1="6" y1="14" x2="14" y2="14" />
+      <path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M6 14h12" />
     </svg>
   );
 }
 
 function SendIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <line x1="4" y1="12" x2="20" y2="12" />
-      <polyline points="13 5 20 12 13 19" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <path d="M5 12h14M13 6l6 6-6 6" />
     </svg>
   );
 }
@@ -121,6 +86,30 @@ function statusCaption(status: SpeechRecognitionStatus, t: Copy): string {
   }
 }
 
+function readDraftThread(): ChatMessage[] {
+  try {
+    const raw = window.sessionStorage.getItem(DRAFT_KEY);
+    if (!raw) return [];
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (m): m is ChatMessage =>
+        Boolean(m) && typeof m === "object" && (m.role === "user" || m.role === "assistant") && typeof m.content === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+function writeDraftThread(messages: ChatMessage[]) {
+  try {
+    if (messages.length === 0) window.sessionStorage.removeItem(DRAFT_KEY);
+    else window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(messages));
+  } catch {
+    // session storage unavailable - the thread just won't survive a reload
+  }
+}
+
 export default function TalkPage() {
   return (
     <Suspense fallback={null}>
@@ -130,27 +119,27 @@ export default function TalkPage() {
 }
 
 /**
- * Whisper is an ongoing conversation, not a one-shot form: each message the
- * user sends becomes a turn, Whisper replies with a short real
- * acknowledgment plus (while there's a real thoughtful question left to
- * ask) one focused follow-up, and the thread keeps going until the user
- * chooses to end it. Ending is what turns the whole transcript into one
- * saved memory - the existing generateReflection/saveMemory pipeline,
- * unchanged, just now fed the full conversation instead of a single
- * utterance.
+ * Whisper is an ongoing conversation: each message is one turn, Whisper
+ * replies (streamed from /api/whisper, falling back to the local rule
+ * engine when the API isn't available), and the thread keeps going until
+ * the user chooses to end it. Ending turns the whole transcript into one
+ * saved memory via /api/reflect (same fallback), then shows it.
  */
 function TalkPageInner() {
   const { lang, t } = useLanguage();
+  const profile = useProfile();
+  const memories = useMemories();
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<Mode>(
-    searchParams.get("mode") === "text" ? "text" : "voice",
-  );
+  const [mode, setMode] = useState<Mode>(searchParams.get("mode") === "voice" ? "voice" : "text");
   const [phase, setPhase] = useState<Phase>("composing");
   const [endingStep, setEndingStep] = useState<"listening" | "reflecting">("listening");
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [whisperTyping, setWhisperTyping] = useState(false);
+  // The (app) layout only renders children after hydration, so reading
+  // sessionStorage in the initializer can't mismatch the server.
+  const [messages, setMessages] = useState<ChatMessage[]>(readDraftThread);
+  const [streamingReply, setStreamingReply] = useState<string | null>(null);
+  const [errorLine, setErrorLine] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [interimText, setInterimText] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -158,6 +147,7 @@ function TalkPageInner() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const threadEndRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
 
   const appendFinal = useCallback((chunk: string) => {
     setText((prev) => (prev ? `${prev} ${chunk}` : chunk));
@@ -169,12 +159,16 @@ function TalkPageInner() {
     onInterimResult: setInterimText,
   });
 
+  useEffect(() => {
+    writeDraftThread(messages);
+  }, [messages]);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
   // recording duration ticks only while actually listening, and holds while paused
   useEffect(() => {
     if (status === "listening") {
-      intervalRef.current = setInterval(() => {
-        setElapsedSeconds((s) => s + 1);
-      }, 1000);
+      intervalRef.current = setInterval(() => setElapsedSeconds((s) => s + 1), 1000);
     } else if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
@@ -184,17 +178,13 @@ function TalkPageInner() {
     };
   }, [status]);
 
-  const displayValue = interimText
-    ? text
-      ? `${text} ${interimText}`
-      : interimText
-    : text;
+  const displayValue = interimText ? (text ? `${text} ${interimText}` : interimText) : text;
 
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${el.scrollHeight}px`;
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [displayValue, mode]);
 
   useEffect(() => {
@@ -203,7 +193,7 @@ function TalkPageInner() {
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, whisperTyping]);
+  }, [messages, streamingReply]);
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (status === "listening") pause();
@@ -212,11 +202,8 @@ function TalkPageInner() {
   };
 
   const handleMicClick = () => {
-    if (status === "listening") {
-      pause();
-    } else {
-      start();
-    }
+    if (status === "listening") pause();
+    else start();
   };
 
   const switchMode = (next: Mode) => {
@@ -225,98 +212,124 @@ function TalkPageInner() {
     setMode(next);
   };
 
-  const handleCancel = () => {
+  const handleClearDraft = () => {
     stop();
     setText("");
     setInterimText("");
     setElapsedSeconds(0);
   };
 
-  const wordCount = useMemo(
-    () => text.trim().split(/\s+/).filter(Boolean).length,
-    [text],
-  );
+  const wordCount = useMemo(() => text.trim().split(/\s+/).filter(Boolean).length, [text]);
   const hasContent = text.trim().length > 0;
-  const hasMeaningfulContent = wordCount >= 3;
+  const canSend = wordCount >= 1 && streamingReply === null;
   const hasConversation = messages.length > 0;
+  const hasExchange = messages.some((m) => m.role === "assistant");
+  const isReplying = streamingReply !== null;
 
-  // Sends the current draft as one turn - Whisper replies, the thread
-  // continues. This never ends the conversation by itself.
-  const handleSendTurn = useCallback(() => {
-    if (!hasMeaningfulContent) return;
+  const handleSendTurn = useCallback(async () => {
+    if (!canSend) return;
     stop();
     const userText = text.trim();
-    const userHistory = [...messages.filter((m) => m.role === "user").map((m) => m.text), userText];
+    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: userText }];
 
-    setMessages((prev) => [...prev, { role: "user", text: userText }]);
+    setMessages(nextMessages);
     setText("");
     setInterimText("");
     setElapsedSeconds(0);
-    setWhisperTyping(true);
+    setErrorLine(null);
+    setStreamingReply("");
 
-    window.setTimeout(() => {
-      const reply = getWhisperTurnReply(userHistory, lang);
-      setMessages((prev) => [...prev, { role: "whisper", text: reply.message }]);
-      setWhisperTyping(false);
-    }, 900);
-  }, [hasMeaningfulContent, text, stop, messages, lang]);
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    try {
+      const reply = await streamCompanion(
+        "/api/whisper",
+        { lang, messages: nextMessages, context: companionContext(profile.name, memories, lang) },
+        setStreamingReply,
+        controller.signal,
+      );
+      setMessages([...nextMessages, { role: "assistant", content: reply }]);
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      if (err instanceof AiUnavailableError && err.reason === "no_api_key") {
+        // No backend configured (local dev) - the old rule engine keeps the thread alive.
+        const userHistory = nextMessages.filter((m) => m.role === "user").map((m) => m.content);
+        const fallback = getWhisperTurnReply(userHistory, lang);
+        setMessages([...nextMessages, { role: "assistant", content: fallback.message }]);
+      } else {
+        // Hand the message back so nothing they wrote is lost.
+        setMessages(messages);
+        setText(userText);
+        setErrorLine(t.aiUnavailable);
+      }
+    } finally {
+      setStreamingReply(null);
+      abortRef.current = null;
+    }
+  }, [canSend, text, stop, messages, lang, profile.name, memories, t.aiUnavailable]);
 
   // Ends the whole conversation - the real reflection pipeline runs on
   // everything that was actually said, not just the last line.
-  const handleEndConversation = useCallback(() => {
+  const handleEndConversation = useCallback(async () => {
     stop();
-    const finalTranscript = [...messages.filter((m) => m.role === "user").map((m) => m.text), text.trim()]
-      .filter(Boolean)
-      .join("\n");
-    if (!finalTranscript.trim()) return;
+    const pending = text.trim();
+    const finalMessages: ChatMessage[] = pending ? [...messages, { role: "user", content: pending }] : messages;
+    if (!finalMessages.some((m) => m.role === "user")) return;
 
     setPhase("ending");
     setEndingStep("listening");
+    const stepTimer = window.setTimeout(() => setEndingStep("reflecting"), 1200);
 
-    window.setTimeout(() => {
-      setEndingStep("reflecting");
-      window.setTimeout(() => {
-        const generated = generateReflection(finalTranscript, lang);
-        saveMemory({
-          id: createMemoryId(),
-          createdAt: new Date().toISOString(),
-          lang,
-          transcript: finalTranscript,
-          reflection: generated.reflection,
-          standout: generated.standout,
-          emotion: generated.emotion,
-          emotionKey: generated.emotionKey,
-          intensity: generated.intensity,
-          confidence: generated.confidence,
-          topics: generated.topics,
-          people: generated.people,
-        });
-        // /reflection reads storage fresh on mount - memories[0] is this
-        // session, memories[1] (if any) is what "last time" refers to.
-        router.push("/reflection");
-      }, 900);
-    }, 900);
+    const transcript = finalMessages
+      .map((m) => `${m.role === "user" ? (lang === "vi" ? "Bạn" : "You") : lang === "vi" ? "Thì Thầm" : "Whisper"}: ${m.content}`)
+      .join("\n");
+    const userOnly = finalMessages.filter((m) => m.role === "user").map((m) => m.content).join("\n");
+
+    let generated;
+    try {
+      const result = await requestReflection(lang, finalMessages);
+      generated = { ...result, emotion: result.emotionKey };
+    } catch {
+      generated = generateReflection(userOnly, lang);
+    }
+    window.clearTimeout(stepTimer);
+
+    saveMemory({
+      id: createMemoryId(),
+      createdAt: new Date().toISOString(),
+      lang,
+      transcript,
+      reflection: generated.reflection,
+      standout: generated.standout,
+      emotion: generated.emotion,
+      emotionKey: generated.emotionKey,
+      intensity: generated.intensity,
+      confidence: generated.confidence,
+      topics: generated.topics,
+      people: generated.people,
+      source: "whisper",
+    });
+    writeDraftThread([]);
+    router.push("/reflection");
   }, [messages, text, stop, lang, router]);
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (mode !== "text") return;
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSendTurn();
+      void handleSendTurn();
     }
   };
 
   const micDisabled = status === "unsupported";
   const showTroubleMessage =
-    status === "permission-denied" ||
-    status === "network-error" ||
-    status === "unsupported";
+    status === "permission-denied" || status === "network-error" || status === "unsupported";
   const showWaveform = status === "listening" || status === "paused";
 
   if (phase === "ending") {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-6 py-24">
-        <Moon size={80} priority />
+        <Moon size={80} sway priority />
         <p key={endingStep} className="animate-rise mt-6 font-serif text-2xl text-secondary">
           {endingStep === "listening" ? t.processingListening : t.processingReflecting}
         </p>
@@ -325,223 +338,205 @@ function TalkPageInner() {
   }
 
   return (
-    <div className="relative flex flex-1 flex-col px-6 py-10">
-      {/* Top row: end-conversation (once there's a real thread) + the quiet corner mode switch */}
-      <div className="flex items-center justify-between">
-        <div>
-          {hasConversation && (
+    <div className="relative flex flex-1 flex-col px-4 py-6 sm:px-6 sm:py-8">
+      <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col">
+        {/* Header: who you're talking to + the mode switch */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Moon size={40} priority animate={!hasConversation} />
+            <div>
+              <h1 className="font-serif text-2xl text-ink">{t.navTalk}</h1>
+              <p className="text-xs text-muted">{t.talkSubtitle}</p>
+            </div>
+          </div>
+          <div className="haven-surface flex items-center gap-1 rounded-full p-1 text-xs" role="group" aria-label={`${t.voiceModeLabel} / ${t.textModeLabel}`}>
             <button
               type="button"
-              onClick={handleEndConversation}
-              className="text-sm text-primary hover:opacity-70"
+              onClick={() => switchMode("text")}
+              aria-pressed={mode === "text"}
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
+                mode === "text" ? "bg-primary text-white" : "text-muted hover:text-ink"
+              }`}
             >
-              {t.finishReflection}
+              <KeyboardIcon className="h-3.5 w-3.5" />
+              {t.textModeLabel}
             </button>
+            <button
+              type="button"
+              onClick={() => switchMode("voice")}
+              aria-pressed={mode === "voice"}
+              className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 transition-colors ${
+                mode === "voice" ? "bg-primary text-white" : "text-muted hover:text-ink"
+              }`}
+            >
+              <MicIcon className="h-3.5 w-3.5" />
+              {t.voiceModeLabel}
+            </button>
+          </div>
+        </div>
+
+        {/* Thread */}
+        <div className="flex flex-1 flex-col overflow-y-auto">
+          {!hasConversation ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-6 py-10 text-center">
+              <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} priority />
+              <p className="animate-rise max-w-sm text-sm text-muted">{t.carryAloneLine}</p>
+              {mode === "text" && !hasContent && (
+                <div className="flex w-full max-w-xl flex-wrap justify-center gap-2">
+                  {talkStarterPrompts(lang).map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      onClick={() => {
+                        setText(prompt);
+                        textareaRef.current?.focus();
+                      }}
+                      className="haven-surface animate-rise rounded-full px-4 py-2 text-sm text-ink transition-transform hover:-translate-y-0.5"
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-1 flex-col gap-3 py-6">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  {m.role === "assistant" && <Moon size={28} animate={false} />}
+                  <div
+                    className={`max-w-[85%] whitespace-pre-line rounded-2xl px-4 py-3 text-[1.02rem] leading-relaxed ${
+                      m.role === "user" ? "rounded-br-md bg-primary text-white" : "haven-surface rounded-bl-md text-ink"
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {isReplying && (
+                <div className="flex items-end gap-2 justify-start">
+                  <Moon size={28} animate={false} />
+                  <div className="haven-surface max-w-[85%] whitespace-pre-line rounded-2xl rounded-bl-md px-4 py-3 text-[1.02rem] leading-relaxed text-ink">
+                    {streamingReply ? streamingReply : <span className="text-sm italic text-muted">{t.talkTyping}</span>}
+                  </div>
+                </div>
+              )}
+              <div ref={threadEndRef} />
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-1 rounded-full border border-line p-1 text-xs">
-          <button
-            type="button"
-            onClick={() => switchMode("voice")}
-            aria-pressed={mode === "voice"}
-            aria-label={t.voiceModeLabel}
-            className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
-              mode === "voice" ? "bg-primary text-paper" : "text-muted hover:text-ink"
-            }`}
-          >
-            <MicIcon className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode("text")}
-            aria-pressed={mode === "text"}
-            aria-label={t.textModeLabel}
-            className={`flex h-7 w-7 items-center justify-center rounded-full transition-colors ${
-              mode === "text" ? "bg-primary text-paper" : "text-muted hover:text-ink"
-            }`}
-          >
-            <KeyboardIcon className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto">
-        {!hasConversation ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-8 py-10">
-            {mode === "voice" && (
-              <div className="flex flex-col items-center gap-3">
-                <Moon size={status === "listening" ? 120 : 96} sway={status === "listening"} priority />
-                {!hasContent && status === "idle" && (
-                  <p className="animate-rise text-sm text-muted">{t.carryAloneLine}</p>
+        {/* Composer */}
+        <div className="sticky bottom-20 md:bottom-4">
+          {errorLine && <p className="mb-2 text-center text-sm text-signal">{errorLine}</p>}
+
+          {hasExchange && (
+            <div className="mb-2 flex items-center justify-end gap-2">
+              <span className="hidden text-xs text-muted sm:inline">{t.finishReflectionHint}</span>
+              <button
+                type="button"
+                onClick={() => void handleEndConversation()}
+                disabled={isReplying}
+                className="haven-surface rounded-full px-4 py-2 text-sm text-primary transition-colors hover:bg-lavender/60 disabled:opacity-50"
+              >
+                {t.finishReflection}
+              </button>
+            </div>
+          )}
+
+          <div className="haven-surface rounded-3xl px-4 py-3">
+            <textarea
+              ref={textareaRef}
+              value={displayValue}
+              onChange={handleTextChange}
+              onKeyDown={handleTextareaKeyDown}
+              placeholder={t.talkPlaceholder}
+              rows={1}
+              autoComplete="off"
+              spellCheck={false}
+              className="block w-full resize-none bg-transparent px-1 py-1 text-[1.1rem] leading-relaxed text-ink placeholder:text-muted/70 focus:outline-none"
+            />
+
+            {mode === "voice" ? (
+              <div className="mt-2 flex flex-col items-center gap-3 border-t border-line pt-3">
+                {showWaveform && (
+                  <div className="flex items-center gap-3">
+                    <Waveform active={status === "listening"} />
+                    <span className="font-sans text-xs tabular-nums text-muted">{formatDuration(elapsedSeconds)}</span>
+                  </div>
                 )}
-              </div>
-            )}
-
-            {mode === "text" && !hasContent && (
-              <div className="flex w-full max-w-2xl flex-wrap justify-center gap-2">
-                {talkStarterPrompts(lang).map((prompt) => (
+                <div className="flex w-full items-center justify-between">
                   <button
-                    key={prompt}
                     type="button"
-                    onClick={() => {
-                      setText(prompt);
-                      textareaRef.current?.focus();
-                    }}
-                    className="haven-surface animate-rise rounded-full px-4 py-2 text-sm text-ink transition-transform hover:-translate-y-0.5"
+                    onClick={handleClearDraft}
+                    className={`text-sm text-muted transition-opacity hover:text-ink ${hasContent ? "opacity-100" : "pointer-events-none opacity-0"}`}
                   >
-                    {prompt}
+                    {t.cancel}
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={handleMicClick}
+                    disabled={micDisabled}
+                    aria-label={status === "listening" ? t.statusPaused : t.statusIdle}
+                    className={`flex h-14 w-14 items-center justify-center rounded-full border transition-all ${
+                      status === "listening"
+                        ? "mic-glow border-primary bg-primary text-white"
+                        : micDisabled
+                          ? "cursor-not-allowed border-line text-line"
+                          : "border-line text-ink hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {status === "listening" ? <PauseIcon className="h-6 w-6" /> : <MicIcon className="h-6 w-6" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSendTurn()}
+                    disabled={!canSend}
+                    className={`haven-cta flex items-center gap-2 rounded-full px-4 py-2 text-sm ${
+                      canSend ? "bg-primary text-white hover:bg-primary-hover" : "cursor-not-allowed bg-line text-muted"
+                    }`}
+                  >
+                    {t.send}
+                    <SendIcon className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className={`text-center text-xs ${showTroubleMessage ? "text-signal" : "text-muted"}`}>{statusCaption(status, t)}</p>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-4 py-6">
-            {messages.map((m, i) => (
-              <div key={i} className={`flex items-end gap-2 ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                {m.role === "whisper" && <Moon size={28} animate={false} />}
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-[1.05rem] leading-relaxed ${
-                    m.role === "user" ? "bg-primary text-white" : "haven-surface text-ink"
-                  }`}
-                >
-                  {m.text}
+            ) : (
+              <div className="mt-1 flex items-center justify-between gap-3">
+                <span className="hidden text-xs text-muted sm:inline">{t.talkHintEnter}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleClearDraft}
+                    className={`text-sm text-muted transition-opacity hover:text-ink ${hasContent ? "opacity-100" : "pointer-events-none opacity-0"}`}
+                  >
+                    {t.cancel}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleSendTurn()}
+                    disabled={!canSend}
+                    className={`haven-cta flex items-center gap-2 rounded-full px-5 py-2.5 text-sm ${
+                      canSend ? "bg-primary text-white hover:bg-primary-hover" : "cursor-not-allowed bg-line text-muted"
+                    }`}
+                  >
+                    {t.send}
+                    <SendIcon className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
-            ))}
-            {whisperTyping && (
-              <div className="flex items-end gap-2 justify-start">
-                <Moon size={28} animate={false} />
-                <div className="haven-surface rounded-2xl px-4 py-3 text-sm italic text-muted">{t.talkTyping}</div>
-              </div>
             )}
-            <div ref={threadEndRef} />
           </div>
-        )}
-      </div>
 
-      <div className="mx-auto w-full max-w-2xl">
-        <textarea
-          ref={textareaRef}
-          value={displayValue}
-          onChange={handleTextChange}
-          onKeyDown={handleTextareaKeyDown}
-          placeholder={t.talkPlaceholder}
-          rows={1}
-          autoComplete="off"
-          spellCheck={false}
-          className="w-full resize-none overflow-hidden bg-transparent text-[1.35rem] leading-relaxed text-ink placeholder:text-line focus:outline-none"
-          autoFocus
-        />
-      </div>
-
-      <div className="flex w-full flex-col items-center gap-4 pb-6 pt-4">
-        {mode === "voice" ? (
-          <>
-            {showTroubleMessage && (
-              <div className="max-w-sm text-center text-sm text-muted">
-                <p>{statusCaption(status, t)}</p>
-                {(status === "permission-denied" || status === "network-error") && (
-                  <a
-                    href={typeof window !== "undefined" ? window.location.href : "/talk"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 inline-block text-secondary underline underline-offset-2"
-                  >
-                    {t.openInBrowser}
-                  </a>
-                )}
-              </div>
-            )}
-
-            {showWaveform && (
-              <div className="flex flex-col items-center gap-1.5">
-                <Waveform active={status === "listening"} />
-                <span className="font-sans text-xs tabular-nums text-muted">
-                  {formatDuration(elapsedSeconds)}
-                </span>
-              </div>
-            )}
-
-            <div className="flex items-center gap-8">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className={`text-sm text-muted transition-opacity hover:text-ink ${
-                  hasContent ? "opacity-100" : "pointer-events-none opacity-0"
-                }`}
-              >
-                {t.cancel}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleMicClick}
-                disabled={micDisabled}
-                aria-label={status === "listening" ? t.statusPaused : t.statusIdle}
-                className={`flex h-16 w-16 items-center justify-center rounded-full border transition-all ${
-                  status === "listening"
-                    ? "mic-glow border-primary bg-primary text-paper"
-                    : micDisabled
-                      ? "cursor-not-allowed border-line text-line"
-                      : "border-line text-ink hover:border-primary hover:text-primary"
-                }`}
-              >
-                {status === "listening" ? (
-                  <PauseIcon className="h-6 w-6" />
-                ) : (
-                  <MicIcon className="h-6 w-6" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSendTurn}
-                className={`text-sm text-primary transition-opacity hover:opacity-70 ${
-                  hasMeaningfulContent ? "opacity-100" : "pointer-events-none opacity-0"
-                }`}
-              >
-                {t.send}
-              </button>
-            </div>
-
-            {!showTroubleMessage && (
-              <p className="text-sm text-muted">{statusCaption(status, t)}</p>
-            )}
-          </>
-        ) : (
-          <div className="flex w-full max-w-2xl flex-col items-center gap-2">
-            <div className="flex w-full items-center justify-between">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className={`text-sm text-muted transition-opacity hover:text-ink ${
-                  hasContent ? "opacity-100" : "pointer-events-none opacity-0"
-                }`}
-              >
-                {t.cancel}
-              </button>
-              <button
-                type="button"
-                onClick={handleSendTurn}
-                disabled={!hasMeaningfulContent}
-                className={`flex items-center gap-2 rounded-full px-5 py-2 text-sm ${
-                  hasMeaningfulContent
-                    ? "haven-cta bg-primary text-paper hover:opacity-90"
-                    : "cursor-not-allowed bg-line text-muted"
-                }`}
-              >
-                {t.send}
-                <SendIcon className="h-4 w-4" />
-              </button>
-            </div>
-            <p className="text-xs text-muted">
-              {lang === "vi"
-                ? "Enter để gửi · Shift+Enter để xuống dòng"
-                : "Enter to send · Shift+Enter for a new line"}
+          {!hasConversation && (
+            <p className="mt-3 text-center text-xs text-muted">
+              <Link href="/discover" className="underline underline-offset-2 hover:text-ink">
+                {t.homeAuroraCardBody}
+              </Link>
             </p>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

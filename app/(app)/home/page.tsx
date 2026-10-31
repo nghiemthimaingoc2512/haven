@@ -37,9 +37,17 @@ export default function HomePage() {
 
   const greeting = {
     morning: t.homeGreetingMorning,
+    noon: t.homeGreetingNoon,
     afternoon: t.homeGreetingAfternoon,
     evening: t.homeGreetingEvening,
     night: t.homeGreetingNight,
+  }[period];
+  const heroQuestion = {
+    morning: t.heroQuestionMorning,
+    noon: t.heroQuestionNoon,
+    afternoon: t.heroQuestionAfternoon,
+    evening: t.heroQuestionEvening,
+    night: t.heroQuestionNight,
   }[period];
 
   // A real callback to the last conversation when there's one worth making -
@@ -80,7 +88,7 @@ export default function HomePage() {
           {whisperGreeting ? (
             <p className="mt-5 font-serif text-2xl leading-relaxed text-ink">
               {profile.name ? `${profile.name}, ` : ""}
-              {whisperGreeting}
+              {profile.name ? whisperGreeting.charAt(0).toLowerCase() + whisperGreeting.slice(1) : whisperGreeting}
             </p>
           ) : (
             <>
@@ -88,8 +96,9 @@ export default function HomePage() {
                 {greeting}
                 {profile.name ? `, ${profile.name}` : ""}.
               </p>
-              <p className="mt-1 text-secondary">
-                {isNight ? t.nightWindDown : ""} {t.heroQuestion}
+              <p className="mt-2 text-secondary">
+                {isNight ? `${t.nightWindDown} ` : ""}
+                {heroQuestion}
               </p>
             </>
           )}
@@ -100,7 +109,7 @@ export default function HomePage() {
           href="/talk"
           className="haven-cta animate-rise mt-4 flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-center font-serif text-lg text-white hover:bg-primary-hover"
         >
-          {t.homeContinueConversation}
+          {memories.length > 0 ? t.homeContinueConversation : t.homeStartConversation}
         </Link>
 
         {isNight ? (
