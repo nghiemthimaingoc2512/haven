@@ -501,7 +501,7 @@ function TalkPageInner() {
             ) : (
               <div className="mt-1 flex items-center justify-between gap-3">
                 <span className="hidden text-xs text-muted sm:inline">{t.talkHintEnter}</span>
-                <div className="flex items-center gap-2">
+                <div className="ml-auto flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handleClearDraft}

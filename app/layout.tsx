@@ -14,15 +14,15 @@ const newsreader = Newsreader({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://havenmind-ai.vercel.app",
   ),
-  title: "Haven",
+  title: "Haven - Nơi để đi về",
   description:
-    "A place to say the thing you haven't said yet, and be understood, not managed.",
+    "Nơi để nói ra điều bạn chưa nói được, và được lắng nghe. Dùng ngay trên trình duyệt, không cần tài khoản.",
   openGraph: {
-    title: "Haven",
+    title: "Haven - Nơi để đi về",
     description:
-      "A place to say the thing you haven't said yet, and be understood, not managed.",
+      "Nơi để nói ra điều bạn chưa nói được, và được lắng nghe. Dùng ngay trên trình duyệt, không cần tài khoản.",
     type: "website",
   },
 };
@@ -39,7 +39,7 @@ export default function RootLayout({
     // unavoidable external cause, not an app bug. It does not suppress
     // mismatches anywhere else in the tree.
     <html
-      lang="en"
+      lang="vi"
       className={`${newsreader.variable} h-full`}
       suppressHydrationWarning
     >
